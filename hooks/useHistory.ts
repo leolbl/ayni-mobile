@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AnalysisResult, Checkup } from '../types';
 import { mockHistoryData } from '../data/mockHistoryData';
+import { calculateNextAnalysisDate } from '../services/healthRiskService';
 
 export interface HistoryEntry {
     id: string;
@@ -40,7 +41,7 @@ interface UseHistoryReturn {
  * Hook personalizado para manejar el historial de análisis médicos
  * Incluye funciones para agregar nuevos análisis y calcular tiempos de seguimiento
  */
-export const useHistory = (useMockData: boolean = false): UseHistoryReturn => {
+export const useHistory = (useMockData: boolean = false, userProfile?: any): UseHistoryReturn => {
     const [history, setHistory] = useState<HistoryEntry[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -118,11 +119,16 @@ export const useHistory = (useMockData: boolean = false): UseHistoryReturn => {
      * Calcular la fecha del próximo análisis recomendado
      */
     const getNextAnalysisDate = useCallback((): Date => {
-        if (!latestAnalysis) {
-            // Si no hay historial, recomendar en 7 días
+        if (!userProfile) {
+            // Si no hay perfil de usuario, usar valor por defecto de 7 días
             const nextDate = new Date();
             nextDate.setDate(nextDate.getDate() + 7);
             return nextDate;
+        }
+
+        if (!latestAnalysis) {
+            // Si no hay historial, usar la evaluación de riesgo del perfil del usuario
+            return calculateNextAnalysisDate(userProfile);
         }
 
         // Usar la frecuencia específica recomendada en el último análisis
@@ -130,7 +136,7 @@ export const useHistory = (useMockData: boolean = false): UseHistoryReturn => {
         const nextDate = new Date(latestAnalysis.date);
         nextDate.setDate(nextDate.getDate() + frequency);
         return nextDate;
-    }, [latestAnalysis]);
+    }, [latestAnalysis, userProfile]);
 
     /**
      * Obtener el tiempo restante hasta el próximo análisis

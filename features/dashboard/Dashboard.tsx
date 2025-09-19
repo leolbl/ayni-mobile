@@ -103,6 +103,7 @@ const CountdownCard: React.FC<{ userProfile: any; onShowRiskDetails?: () => void
                 source: 'profile' 
             };
         }
+        // Fallback cuando no hay perfil ni análisis
         return { frequency: 7, riskLevel: 'normal', source: 'default' };
     };
 
@@ -117,7 +118,9 @@ const CountdownCard: React.FC<{ userProfile: any; onShowRiskDetails?: () => void
             <div className={`text-sm ${styles.textColor} mb-2 px-3 py-1 rounded-full ${styles.bgColor} border ${styles.borderColor}`}>
                 {frequencyInfo.source === 'analysis' ? 
                     `Basado en tu último análisis: Cada ${frequencyInfo.frequency} día${frequencyInfo.frequency !== 1 ? 's' : ''}` :
-                    `Basado en tu perfil: Cada ${frequencyInfo.frequency} día${frequencyInfo.frequency !== 1 ? 's' : ''}`
+                    frequencyInfo.source === 'profile' ?
+                    `Basado en tu perfil de salud: Cada ${frequencyInfo.frequency} día${frequencyInfo.frequency !== 1 ? 's' : ''}` :
+                    `Frecuencia recomendada: Cada ${frequencyInfo.frequency} día${frequencyInfo.frequency !== 1 ? 's' : ''}`
                 }
             </div>
 
@@ -286,7 +289,7 @@ const Dashboard: React.FC = () => {
     shouldRecommendAnalysis: isRecommendedAnalysis, 
     isLoading,
     streak
-  } = useHistory(false); // false = no usar datos mock, empezar con historial vacío
+  } = useHistory(false, userProfile); // false = no usar datos mock, empezar con historial vacío
   
   const [isCheckupActive, setIsCheckupActive] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
