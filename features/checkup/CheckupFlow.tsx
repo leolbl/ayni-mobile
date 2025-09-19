@@ -16,7 +16,7 @@ const STEPS = [
 
 interface CheckupFlowProps {
   onClose: () => void;
-  onComplete: (result: AnalysisResult) => void;
+  onComplete: (result: AnalysisResult, checkupData: Checkup) => void;
 }
 
 const CheckupFlow: React.FC<CheckupFlowProps> = ({ onClose, onComplete }) => {
@@ -53,7 +53,7 @@ const CheckupFlow: React.FC<CheckupFlowProps> = ({ onClose, onComplete }) => {
     const result = await getCheckupAnalysis(completeData, userProfile);
     
     setIsLoading(false);
-    onComplete(result);
+    onComplete(result, completeData);
   };
 
   const progress = (currentStep / STEPS.length) * 100;

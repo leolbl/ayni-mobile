@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { auth } from '../../lib/firebase';
-import { AnalysisResult } from '../../types';
+import { AnalysisResult, Checkup } from '../../types';
 import { AnalysisResultCard } from './components/AnalysisResultCard';
 import CheckupFlow from '../checkup/CheckupFlow';
 import ProfileModal from '../profile/ProfileModal';
@@ -9,8 +9,16 @@ import AnalysisHistoryPage from './AnalysisHistoryPage';
 import HealthRiskDetailsModal from './components/HealthRiskDetailsModal';
 import { mockHistoryData } from '../../data/mockHistoryData';
 import { assessHealthRisk, calculateNextAnalysisDate, shouldRecommendAnalysis, HealthRiskAssessment } from '../../services/healthRiskService';
+import { useHistory } from '../../hooks/useHistory';
 
-const CountdownCard: React.FC<{ userProfile: any; onShowRiskDetails?: () => void }> = ({ userProfile, onShowRiskDetails }) => {
+const CountdownCard: React.FC<{ userProfile: any; onShowRiskDetails?: () => void; history: any; latestAnalysis: any; getTimeUntilNextAnalysis: any; shouldRecommendAnalysis: any }> = ({ 
+    userProfile, 
+    onShowRiskDetails, 
+    history, 
+    latestAnalysis, 
+    getTimeUntilNextAnalysis, 
+    shouldRecommendAnalysis 
+}) => {
     const [healthAssessment, setHealthAssessment] = useState<HealthRiskAssessment | null>(null);
 
     useEffect(() => {
@@ -21,69 +29,13 @@ const CountdownCard: React.FC<{ userProfile: any; onShowRiskDetails?: () => void
     }, [userProfile]);
 
     const calculateTimeLeft = () => {
-        if (!userProfile) {
-            // Fallback al comportamiento anterior si no hay datos
-            const nextCheckupDate = new Date();
-            nextCheckupDate.setDate(nextCheckupDate.getDate() + 7);
-            const difference = +nextCheckupDate - +new Date();
-            let timeLeft: { [key: string]: number } = {};
-
-            if (difference > 0) {
-                timeLeft = {
-                    days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-                    hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-                    minutes: Math.floor((difference / 1000 / 60) % 60),
-                };
-            }
-            return timeLeft;
-        }
-
-        // Usar la frecuencia específica del último análisis realizado
-        let recommendedFrequency = 7; // Default fallback
-        let lastAnalysisDate = new Date();
+        const timeUntilNext = getTimeUntilNextAnalysis();
         
-        if (mockHistoryData.length > 0) {
-            const lastAnalysis = mockHistoryData[0];
-            lastAnalysisDate = lastAnalysis.date;
-            
-            // Usar la frecuencia específica recomendada en el último análisis
-            if (lastAnalysis.result.recommendedFrequencyDays) {
-                recommendedFrequency = lastAnalysis.result.recommendedFrequencyDays;
-            } else {
-                // Fallback basado en el nivel de riesgo del último análisis
-                switch (lastAnalysis.result.riskLevel) {
-                    case 'alert':
-                        recommendedFrequency = 2;
-                        break;
-                    case 'warning':
-                        recommendedFrequency = 5;
-                        break;
-                    case 'normal':
-                    default:
-                        recommendedFrequency = 14;
-                        break;
-                }
-            }
-        } else {
-            // Si no hay historial, usar la evaluación del perfil del usuario
-            if (healthAssessment) {
-                recommendedFrequency = healthAssessment.recommendedAnalysisFrequency;
-            }
+        if (!timeUntilNext) {
+            return {}; // Es hora del análisis
         }
-
-        const nextCheckupDate = new Date(lastAnalysisDate);
-        nextCheckupDate.setDate(nextCheckupDate.getDate() + recommendedFrequency);
-        const difference = +nextCheckupDate - +new Date();
-        let timeLeft: { [key: string]: number } = {};
-
-        if (difference > 0) {
-            timeLeft = {
-                days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-                hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-                minutes: Math.floor((difference / 1000 / 60) % 60),
-            };
-        }
-        return timeLeft;
+        
+        return timeUntilNext;
     };
 
     const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
@@ -95,16 +47,16 @@ const CountdownCard: React.FC<{ userProfile: any; onShowRiskDetails?: () => void
         }, 60000); // Cada 60 segundos
 
         return () => clearInterval(timer);
-    }, [userProfile, healthAssessment]); // Recalcular cuando cambie el perfil o la evaluación
+    }, [latestAnalysis, userProfile, healthAssessment]); // Recalcular cuando cambie el análisis
 
     // También actualizar inmediatamente cuando cambien las dependencias
     useEffect(() => {
         setTimeLeft(calculateTimeLeft());
-    }, [userProfile, healthAssessment]);
+    }, [latestAnalysis, userProfile, healthAssessment]);
 
-    const getRiskLevelStyles = (lastAnalysisRisk?: string) => {
+    const getRiskLevelStyles = () => {
         // Usar el riesgo del último análisis si está disponible, sino el del perfil actual
-        const riskToUse = mockHistoryData.length > 0 ? mockHistoryData[0].result.riskLevel : healthAssessment?.riskLevel;
+        const riskToUse = latestAnalysis ? latestAnalysis.result.riskLevel : healthAssessment?.riskLevel;
         
         switch (riskToUse) {
             case 'alert':
@@ -140,10 +92,9 @@ const CountdownCard: React.FC<{ userProfile: any; onShowRiskDetails?: () => void
     
     // Obtener información de frecuencia del último análisis
     const getFrequencyInfo = () => {
-        if (mockHistoryData.length > 0) {
-            const lastAnalysis = mockHistoryData[0];
-            const frequency = lastAnalysis.result.recommendedFrequencyDays || 7;
-            const riskLevel = lastAnalysis.result.riskLevel;
+        if (latestAnalysis) {
+            const frequency = latestAnalysis.result.recommendedFrequencyDays || 7;
+            const riskLevel = latestAnalysis.result.riskLevel;
             return { frequency, riskLevel, source: 'analysis' };
         } else if (healthAssessment) {
             return { 
@@ -200,7 +151,7 @@ const CountdownCard: React.FC<{ userProfile: any; onShowRiskDetails?: () => void
                 </div>
             )}
 
-            {(frequencyInfo.source === 'analysis' && mockHistoryData.length > 0) && (
+            {(frequencyInfo.source === 'analysis' && latestAnalysis) && (
                 <div className={`text-xs ${styles.textColor} mt-4 text-center max-w-md`}>
                     <p className="font-medium mb-1">
                         Último análisis: {new Intl.DateTimeFormat('es-ES', { 
@@ -208,11 +159,11 @@ const CountdownCard: React.FC<{ userProfile: any; onShowRiskDetails?: () => void
                             month: 'short',
                             hour: '2-digit',
                             minute: '2-digit'
-                        }).format(mockHistoryData[0].date)}
+                        }).format(latestAnalysis.date)}
                     </p>
                     <p className="opacity-80">
-                        Riesgo detectado: {mockHistoryData[0].result.riskLevel === 'normal' ? 'Normal' :
-                                          mockHistoryData[0].result.riskLevel === 'warning' ? 'Advertencia' : 'Alerta'}
+                        Riesgo detectado: {latestAnalysis.result.riskLevel === 'normal' ? 'Normal' :
+                                          latestAnalysis.result.riskLevel === 'warning' ? 'Advertencia' : 'Alerta'}
                     </p>
                     {onShowRiskDetails && (
                         <button 
@@ -251,9 +202,9 @@ const StreakCard: React.FC = () => {
     );
 };
 
-const AnalysisHistoryCard: React.FC<{ onViewHistory: () => void }> = ({ onViewHistory }) => {
-    // Usar los últimos 3 análisis de los datos mock
-    const recentHistory = mockHistoryData.slice(0, 3).map(entry => ({
+const AnalysisHistoryCard: React.FC<{ onViewHistory: () => void; history: any[] }> = ({ onViewHistory, history }) => {
+    // Usar los últimos 3 análisis del historial actual
+    const recentHistory = history.slice(0, 3).map(entry => ({
         date: new Intl.DateTimeFormat('es-ES', { 
             day: 'numeric',
             month: 'short',
@@ -294,7 +245,7 @@ const AnalysisHistoryCard: React.FC<{ onViewHistory: () => void }> = ({ onViewHi
                 onClick={onViewHistory}
                 className="text-sm text-[#2A787A] hover:text-[#2A787A]/80 font-semibold mt-4 text-center w-full transition-colors"
             >
-                Ver todo ({mockHistoryData.length} análisis)
+                Ver todo ({history.length} análisis)
             </button>
         </div>
     );
@@ -308,12 +259,22 @@ const UserCircleIcon = ({ className }: { className?: string }) => (
 
 const Dashboard: React.FC = () => {
   const { userProfile } = useAuth();
+  const { 
+    history, 
+    latestAnalysis, 
+    addNewAnalysis, 
+    getTimeUntilNextAnalysis, 
+    shouldRecommendAnalysis: isRecommendedAnalysis, 
+    isLoading 
+  } = useHistory();
+  
   const [isCheckupActive, setIsCheckupActive] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [showHistoryPage, setShowHistoryPage] = useState(false);
   const [healthAssessment, setHealthAssessment] = useState<HealthRiskAssessment | null>(null);
   const [showRiskDetailsModal, setShowRiskDetailsModal] = useState(false);
+  const [lastCheckup, setLastCheckup] = useState<Checkup | null>(null);
   
   useEffect(() => {
     if (userProfile) {
@@ -327,9 +288,20 @@ const Dashboard: React.FC = () => {
     setIsCheckupActive(true);
   };
   
-  const handleCheckupComplete = (result: AnalysisResult) => {
+  const handleCheckupComplete = (result: AnalysisResult, checkupData: Checkup) => {
+    // Guardar los datos del checkup para poder agregar al historial
+    setLastCheckup(checkupData);
     setAnalysisResult(result);
     setIsCheckupActive(false);
+    
+    // Agregar inmediatamente al historial usando el hook
+    addNewAnalysis(checkupData, result);
+    
+    console.log('Nuevo análisis agregado al historial:', {
+      checkup: checkupData,
+      result: result,
+      timestamp: new Date().toISOString()
+    });
   };
 
   const handleViewHistory = () => {
@@ -355,11 +327,8 @@ const Dashboard: React.FC = () => {
 
   const greeting = `¡Hola, ${userProfile?.name?.split(' ')[0] || 'Usuario'}!`;
 
-  // Determinar si se debe mostrar una recomendación urgente
-  const isAnalysisRecommended = userProfile && shouldRecommendAnalysis(
-    userProfile, 
-    mockHistoryData.length > 0 ? mockHistoryData[0].date : undefined
-  );
+  // Determinar si se debe mostrar una recomendación urgente usando el hook
+  const isAnalysisRecommended = isRecommendedAnalysis();
 
   return (
     <>
@@ -416,7 +385,14 @@ const Dashboard: React.FC = () => {
           <div className="lg:grid lg:grid-cols-3 gap-6 mb-8 flex flex-col lg:flex-none">
             {/* CountdownCard */}
             <div className="lg:col-span-2 order-1 lg:order-none">
-              <CountdownCard userProfile={userProfile} onShowRiskDetails={handleShowRiskDetails} />
+              <CountdownCard 
+                userProfile={userProfile} 
+                onShowRiskDetails={handleShowRiskDetails}
+                history={history}
+                latestAnalysis={latestAnalysis}
+                getTimeUntilNextAnalysis={getTimeUntilNextAnalysis}
+                shouldRecommendAnalysis={isRecommendedAnalysis}
+              />
             </div>
             
             {/* Contenedor de la columna derecha en desktop, elementos separados en móvil */}
@@ -459,7 +435,7 @@ const Dashboard: React.FC = () => {
               
               {/* Historial - al final en móvil */}
               <div className="order-5 lg:order-none">
-                <AnalysisHistoryCard onViewHistory={handleViewHistory} />
+                <AnalysisHistoryCard onViewHistory={handleViewHistory} history={history} />
               </div>
             </div>
             
