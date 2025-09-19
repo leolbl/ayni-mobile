@@ -33,6 +33,9 @@ export interface AnalysisResult {
   recommendations: string[];
   keyFindings: string[];
   urgencyLevel: 'routine' | 'priority' | 'urgent';
+  personalizedInsights: string[];
+  riskFactors: string[];
+  followUpPlan: string;
 }
 
 // --- NUEVOS TIPOS PARA EL CHEQUEO DE BIENESTAR ---

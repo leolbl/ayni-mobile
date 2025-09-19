@@ -10,6 +10,7 @@ interface AuthContextType {
   loading: boolean;
   profileLoading: boolean;
   signInAsGuest: (profileData: Partial<UserProfile>) => void;
+  signOut: () => void;
   updateUserProfile: (newProfileData: Partial<UserProfile>) => Promise<void>;
 }
 
@@ -19,6 +20,7 @@ export const AuthContext = createContext<AuthContextType>({
   loading: true,
   profileLoading: true,
   signInAsGuest: (_profileData: Partial<UserProfile>) => {},
+  signOut: () => {},
   updateUserProfile: async (_newProfileData: Partial<UserProfile>) => {},
 });
 
@@ -91,6 +93,14 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     setProfileLoading(false);
   };
 
+  const signOut = () => {
+    // Para fines de prueba sin backend, simplemente limpiamos el estado del usuario.
+    // Esto provocará la redirección a la pantalla de login.
+    setUser(null);
+    setUserProfile(null);
+    // Originalmente, esto llamaría a auth.signOut() de Firebase.
+  };
+
   const updateUserProfile = async (newProfileData: Partial<UserProfile>) => {
     if (!user || !userProfile) {
       console.error("No hay usuario o perfil para actualizar");
@@ -117,7 +127,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
 
-  const value = { user, userProfile, loading, profileLoading, signInAsGuest, updateUserProfile };
+  const value = { user, userProfile, loading, profileLoading, signInAsGuest, signOut, updateUserProfile };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
