@@ -1,11 +1,11 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { UserProfile, AnalysisResult, Checkup } from '../types';
 
-// Asumir que process.env.API_KEY está configurado en el entorno
-const API_KEY = process.env.API_KEY;
+// Asumir que process.env.GEMINI_API_KEY está configurado en el entorno
+const API_KEY = process.env.GEMINI_API_KEY;
 
 if (!API_KEY) {
-  console.error("La clave de API de Gemini no está configurada. Por favor, establece la variable de entorno API_KEY.");
+  console.error("La clave de API de Gemini no está configurada. Por favor, establece la variable de entorno GEMINI_API_KEY.");
 }
 
 const ai = new GoogleGenAI({ apiKey: API_KEY! });
@@ -16,19 +16,32 @@ const responseSchema = {
     riskLevel: {
       type: Type.STRING,
       enum: ["normal", "warning", "alert"],
-      description: "El nivel de riesgo calculado basado en los síntomas y el perfil del usuario."
+      description: "Nivel de riesgo: 'normal' para estado saludable, 'warning' para situaciones que requieren seguimiento, 'alert' para casos que necesitan atención médica urgente."
     },
     explanation: {
       type: Type.STRING,
-      description: "Una explicación clara y empática para el nivel de riesgo, escrita en términos sencillos para el usuario."
+      description: "Explicación clara, empática y en términos sencillos del estado de salud actual. Debe incluir una breve justificación del nivel de riesgo asignado, considerando los hallazgos más relevantes. Máximo 150 palabras."
     },
     recommendations: {
       type: Type.ARRAY,
+      items: { 
+        type: Type.STRING,
+        description: "Recomendación específica y accionable con plazo temporal cuando sea relevante"
+      },
+      description: "Lista de 2-3 recomendaciones priorizadas, específicas y accionables. Deben incluir plazos cuando sea apropiado (ej: 'en las próximas 24 horas', 'esta semana', 'en tu próxima cita médica')."
+    },
+    keyFindings: {
+      type: Type.ARRAY,
       items: { type: Type.STRING },
-      description: "Una lista de 2-3 pasos siguientes claros y accionables para el usuario."
+      description: "Lista de 1-3 hallazgos más significativos que influyeron en la evaluación (ej: 'Presión arterial elevada', 'Síntomas compatibles con resfriado común', 'Signos vitales normales para la edad')"
+    },
+    urgencyLevel: {
+      type: Type.STRING,
+      enum: ["routine", "priority", "urgent"],
+      description: "Nivel de urgencia para buscar atención médica: 'routine' para seguimiento normal, 'priority' para atención en días, 'urgent' para atención inmediata"
     }
   },
-  required: ["riskLevel", "explanation", "recommendations"]
+  required: ["riskLevel", "explanation", "recommendations", "keyFindings", "urgencyLevel"]
 };
 
 function calculateAge(birthDateString: string): number {
@@ -51,8 +64,13 @@ export const getCheckupAnalysis = async (
     // Devolver una respuesta de prueba si la clave de API no está disponible
     return {
       riskLevel: "warning",
-      explanation: "Clave de API no configurada. Esta es una respuesta de prueba. Por favor, busca consejo médico profesional.",
-      recommendations: ["Consulta a un médico por cualquier preocupación de salud.", "Este servicio es solo para fines informativos."],
+      explanation: "Clave de API no configurada. Esta es una respuesta de prueba. Por favor, busca consejo médico profesional para cualquier preocupación de salud.",
+      recommendations: [
+        "Consulta a un médico por cualquier preocupación de salud.", 
+        "Este servicio es solo para fines informativos y no sustituye atención médica."
+      ],
+      keyFindings: ["Sistema en modo de prueba - API no configurada"],
+      urgencyLevel: "routine"
     };
   }
 
@@ -70,36 +88,73 @@ export const getCheckupAnalysis = async (
       ).join('\n    ')
     : 'El usuario no reporta síntomas específicos.';
 
+  // Calcular IMC para contexto adicional
+  const bmi = userProfile.weight / Math.pow(userProfile.height / 100, 2);
+  const age = calculateAge(userProfile.birthDate);
+
   const prompt = `
-    Analiza el siguiente chequeo de salud integral para un usuario y proporciona una recomendación de triaje.
+    Eres un asistente médico especializado en triaje y evaluación de riesgo. Analiza cuidadosamente el siguiente perfil de salud y datos de chequeo para proporcionar una evaluación precisa y empática.
 
-    **Perfil del Usuario:**
-    - Edad: ${calculateAge(userProfile.birthDate)} años
-    - Sexo: ${userProfile.sex}
-    - Altura: ${userProfile.height} cm
-    - Peso: ${userProfile.weight} kg
-    - Condiciones Crónicas: ${userProfile.chronicConditions.join(', ') || 'Ninguna'}
-    - Alergias Conocidas: ${userProfile.allergies.join(', ') || 'Ninguna'}
-    - Enfermedades Pasadas o Cirugías Significativas: ${userProfile.surgeriesOrPastIllnesses.join(', ') || 'Ninguna'}
-    - Medicamentos y Suplementos Actuales: ${userProfile.medicationsAndSupplements.join(', ') || 'Ninguno'}
-    - Estado de Tabaquismo: ${userProfile.smokingStatus || 'No proporcionado'}
-    - Consumo de Alcohol: ${userProfile.alcoholConsumption || 'No proporcionado'}
-    - Frecuencia de Ejercicio: ${userProfile.exerciseFrequency || 'No proporcionado'}
-    - Consumo de Drogas Recreativas: ${userProfile.drugConsumption || 'No proporcionado'}
+    **CONTEXTO DEL PACIENTE:**
+    Paciente: ${userProfile.sex}, ${age} años
+    Antropometría: ${userProfile.height}cm, ${userProfile.weight}kg (IMC: ${bmi.toFixed(1)})
+    
+    **HISTORIAL MÉDICO RELEVANTE:**
+    • Condiciones crónicas activas: ${userProfile.chronicConditions.length ? userProfile.chronicConditions.join(', ') : 'Ninguna registrada'}
+    • Alergias conocidas: ${userProfile.allergies.length ? userProfile.allergies.join(', ') : 'Ninguna registrada'}
+    • Cirugías/enfermedades previas: ${userProfile.surgeriesOrPastIllnesses.length ? userProfile.surgeriesOrPastIllnesses.join(', ') : 'Ninguna registrada'}
+    • Medicación actual: ${userProfile.medicationsAndSupplements.length ? userProfile.medicationsAndSupplements.join(', ') : 'Ninguna'}
+    
+    **FACTORES DE ESTILO DE VIDA:**
+    • Tabaquismo: ${userProfile.smokingStatus || 'No especificado'}
+    • Alcohol: ${userProfile.alcoholConsumption || 'No especificado'}
+    • Ejercicio: ${userProfile.exerciseFrequency || 'No especificado'}
+    • Sustancias: ${userProfile.drugConsumption || 'No especificado'}
 
-    **Datos del Chequeo de Hoy:**
-    - Sensación General (Escala 1-5, 5 es mejor): ${checkup.generalFeeling.scale}
-    - Etiquetas Generales: ${checkup.generalFeeling.tags.join(', ') || 'Ninguna'}
-    - Signos Vitales:
-    - ${vitalsReport}
-    - Síntomas Reportados:
+    **EVALUACIÓN ACTUAL (${new Date().toLocaleDateString()}):**
+    
+    Estado subjetivo: ${checkup.generalFeeling.scale}/5 (donde 5 = excelente)
+    Descriptores: ${checkup.generalFeeling.tags.length ? checkup.generalFeeling.tags.join(', ') : 'Sin descriptores específicos'}
+    
+    Signos vitales registrados:
+    ${vitalsReport}
+    
+    Sintomatología reportada:
     ${symptomsReport}
 
-    **Tu Tarea:**
-    Basado en la combinación del perfil del usuario, su sensación general, sus signos vitales y sus síntomas específicos (o la falta de ellos), evalúa el riesgo potencial para la salud.
-    Devuelve tu análisis estrictamente en el formato JSON proporcionado. El lenguaje debe ser empático, claro y fácil de entender para una persona no médica.
-    No agregues ningún texto introductorio ni formato markdown. Tu salida completa debe ser un único objeto JSON válido que coincida con el esquema.
-    Considera todas las entradas. Por ejemplo, si un usuario informa que se siente bien y tiene signos vitales normales, el riesgo es 'normal'. Si los signos vitales son anormales, incluso sin síntomas, el riesgo debe elevarse. Los síntomas graves (por ejemplo, dolor en el pecho con alta intensidad) siempre deben activar una 'alerta', especialmente con condiciones crónicas relevantes.
+    **INSTRUCCIONES DE EVALUACIÓN:**
+    
+    1. ANALIZA INTEGRALMENTE considerando:
+       - Correlación entre síntomas y signos vitales
+       - Factores de riesgo del historial médico
+       - Edad y contexto demográfico
+       - Interacciones potenciales con medicación actual
+    
+    2. CLASIFICACIÓN DE RIESGO:
+       • "normal": Parámetros dentro de rangos esperados, sin señales de alarma
+       • "warning": Anomalías leves o factores de riesgo que requieren seguimiento
+       • "alert": Signos de alarma que requieren atención médica urgente
+    
+    3. CRITERIOS ESPECÍFICOS DE ALERTA:
+       - Dolor torácico (especialmente >7/10 o con factores de riesgo cardiovascular)
+       - Dificultad respiratoria significativa
+       - Signos vitales críticos (FC >120 o <50, Temp >38.5°C, SpO2 <90%, PA sistólica >180 o <90)
+       - Síntomas neurológicos agudos
+       - Dolor abdominal severo con signos de alarma
+    
+    4. COMUNICACIÓN:
+       - Usa lenguaje empático y comprensible
+       - Evita terminología médica compleja
+       - Proporciona contexto tranquilizador cuando sea apropiado
+       - Enfatiza cuándo buscar atención inmediata vs. seguimiento rutinario
+    
+    5. RECOMENDACIONES ACCIONABLES:
+       - Máximo 3 recomendaciones priorizadas
+       - Incluye plazos específicos cuando sea relevante
+       - Considera recursos de atención disponibles
+       - Incluye medidas de autocuidado apropiadas
+
+    RESPONDE ÚNICAMENTE con un objeto JSON válido que cumpla exactamente el esquema proporcionado. No incluyas texto adicional, explicaciones o formato markdown.
   `;
 
   try {
@@ -115,7 +170,7 @@ export const getCheckupAnalysis = async (
     const jsonText = response.text.trim();
     const result = JSON.parse(jsonText);
     
-    if (result.riskLevel && result.explanation && result.recommendations) {
+    if (result.riskLevel && result.explanation && result.recommendations && result.keyFindings && result.urgencyLevel) {
         return result as AnalysisResult;
     } else {
         throw new Error("Parsed JSON does not match the expected format.");
@@ -125,8 +180,14 @@ export const getCheckupAnalysis = async (
     console.error("Error al llamar a la API de Gemini para el análisis del chequeo:", error);
     return {
       riskLevel: 'warning',
-      explanation: 'Encontramos un problema al analizar tus datos de chequeo. Esto no es un diagnóstico médico. Por favor, consulta a un profesional de la salud si no te sientes bien.',
-      recommendations: ['Contacta a una clínica o médico local.', 'Si es una emergencia, llama a tu número de emergencia local de inmediato.'],
+      explanation: 'Encontramos un problema técnico al analizar tus datos de chequeo. Esto no es un diagnóstico médico. Por favor, consulta a un profesional de la salud si no te sientes bien.',
+      recommendations: [
+        'Contacta a una clínica o médico local si tienes síntomas preocupantes.', 
+        'Si es una emergencia médica, llama a tu número de emergencia local de inmediato.',
+        'Intenta realizar el chequeo nuevamente más tarde.'
+      ],
+      keyFindings: ["Error técnico en el análisis"],
+      urgencyLevel: "routine"
     };
   }
 };

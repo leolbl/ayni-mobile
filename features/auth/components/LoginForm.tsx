@@ -73,24 +73,38 @@ const LoginForm: React.FC = () => {
   return (
     <>
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cyan-50 to-blue-100 p-4">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 space-y-6">
-          <div className="text-center">
-              <h1 className="text-3xl font-bold text-slate-800">AyniSalud</h1>
-              <p className="text-slate-500 mt-2">{isLogin ? 'Bienvenido/a de nuevo, cuídate.' : 'Crea tu cuenta de salud.'}</p>
+        <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-8 space-y-6 relative">
+          {/* Espacio para el logo en la parte superior del panel */}
+          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
+            <div className="w-16 h-16 bg-white rounded-full shadow-lg flex items-center justify-center">
+              {/* Aquí irá tu logo en PNG */}
+              <img 
+                src="./../../assets/logo.png" 
+                alt="AyniSalud Logo" 
+                className="w-12 h-12 object-contain"
+                // Comentar la línea de arriba y descomentar la de abajo cuando tengas el logo
+                // style={{ display: 'none' }}
+              />
+            </div>
           </div>
           
-          {error && <p className="bg-red-100 text-red-700 p-3 rounded-lg text-sm">{error}</p>}
+          <div className="text-center pt-4">
+              <h1 className="text-3xl font-bold text-[#1A2E40] font-poppins">AyniSalud</h1>
+              <p className="text-[#1A2E40]/80 mt-2">{isLogin ? 'Bienvenido/a de nuevo, cuídate.' : 'Crea tu cuenta de salud.'}</p>
+          </div>
           
-          <form onSubmit={handleAuthAction} className="space-y-6">
+          {error && <p className="bg-[#FF7F50]/10 text-red-700 p-3 rounded-lg text-sm">{error}</p>}
+          
+          <form onSubmit={handleAuthAction} className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-slate-600" htmlFor="email">Correo Electrónico</label>
+              <label className="text-sm font-medium text-[#1A2E40]" htmlFor="email">Correo Electrónico</label>
               <input 
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required 
-                className="w-full mt-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition"
+                className="w-full mt-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#2A787A] focus:border-[#2A787A] transition"
                 placeholder="tu@ejemplo.com"
               />
             </div>
@@ -103,14 +117,14 @@ const LoginForm: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required 
                 minLength={6}
-                className="w-full mt-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition"
+                className="w-full mt-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#2A787A] focus:border-[#2A787A] transition"
                 placeholder="••••••••"
               />
             </div>
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full flex justify-center items-center bg-cyan-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 disabled:bg-cyan-400 transition-colors"
+              className="w-full flex justify-center items-center bg-[#2A787A] text-white font-semibold py-3 px-4 rounded-lg hover:bg-[#2A787A]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A787A] disabled:bg-[#2A787A]/50 transition-colors"
             >
               {loading ? <Spinner /> : (isLogin ? 'Iniciar Sesión' : 'Crear Cuenta')}
             </button>
@@ -121,7 +135,7 @@ const LoginForm: React.FC = () => {
                   <div className="w-full border-t border-slate-300"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                  <span className="bg-white px-2 text-slate-500">O continúa con</span>
+                  <span className="bg-white px-2 text-[#1A2E40]/80">O continúa con</span>
               </div>
           </div>
 
@@ -129,7 +143,7 @@ const LoginForm: React.FC = () => {
               <button 
                   onClick={handleGoogleSignIn}
                   disabled={loading}
-                  className="w-full flex justify-center items-center bg-white text-slate-700 font-medium py-3 px-4 border border-slate-300 rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 disabled:opacity-60 transition-colors"
+                  className="w-full flex justify-center items-center bg-white text-[#1A2E40] font-medium py-3 px-4 border border-slate-300 rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A787A] disabled:opacity-60 transition-colors"
               >
                   <GoogleIcon />
                   Iniciar sesión con Google
@@ -137,16 +151,16 @@ const LoginForm: React.FC = () => {
               <button 
                   onClick={handleGuestSignIn}
                   disabled={loading}
-                  className="w-full flex justify-center items-center bg-white text-slate-700 font-medium py-3 px-4 border border-slate-300 rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 disabled:opacity-60 transition-colors"
+                  className="w-full flex justify-center items-center bg-white text-[#1A2E40] font-medium py-3 px-4 border border-slate-300 rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A787A] disabled:opacity-60 transition-colors"
               >
                   <GuestIcon />
                   Continuar como Invitado
               </button>
           </div>
 
-          <p className="text-sm text-center text-slate-500">
+          <p className="text-sm text-center text-[#1A2E40]/80">
             {isLogin ? "¿No tienes una cuenta? " : "¿Ya tienes una cuenta? "}
-            <button onClick={() => { setIsLogin(!isLogin); setError(''); }} className="font-semibold text-cyan-600 hover:underline">
+            <button onClick={() => { setIsLogin(!isLogin); setError(''); }} className="font-semibold text-[#2A787A] hover:underline">
               {isLogin ? 'Regístrate' : 'Inicia Sesión'}
             </button>
           </p>
