@@ -33,33 +33,39 @@ interface UseHistoryReturn {
     getNextAnalysisDate: () => Date;
     clearHistory: () => void;
     isLoading: boolean;
+    streak: number;
 }
 
 /**
  * Hook personalizado para manejar el historial de análisis médicos
  * Incluye funciones para agregar nuevos análisis y calcular tiempos de seguimiento
  */
-export const useHistory = (): UseHistoryReturn => {
+export const useHistory = (useMockData: boolean = false): UseHistoryReturn => {
     const [history, setHistory] = useState<HistoryEntry[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Inicializar con datos mock
+    // Inicializar con datos mock solo si se especifica
     useEffect(() => {
         setIsLoading(true);
         // Simular carga de datos
         setTimeout(() => {
-            const mockData: HistoryEntry[] = mockHistoryData.map(item => ({
-                id: item.id,
-                date: item.date,
-                result: item.result,
-                generalFeeling: item.generalFeeling,
-                hasSymptoms: item.hasSymptoms,
-                vitals: item.vitals
-            }));
-            setHistory(mockData);
+            if (useMockData) {
+                const mockData: HistoryEntry[] = mockHistoryData.map(item => ({
+                    id: item.id,
+                    date: item.date,
+                    result: item.result,
+                    generalFeeling: item.generalFeeling,
+                    hasSymptoms: item.hasSymptoms,
+                    vitals: item.vitals
+                }));
+                setHistory(mockData);
+            } else {
+                // Para usuarios nuevos, inicializar con historial vacío
+                setHistory([]);
+            }
             setIsLoading(false);
         }, 100);
-    }, []);
+    }, [useMockData]);
 
     /**
      * Agregar un nuevo análisis al historial
@@ -165,6 +171,44 @@ export const useHistory = (): UseHistoryReturn => {
         }
     }, []);
 
+    /**
+     * Calcular racha de días consecutivos con análisis
+     */
+    const calculateStreak = useCallback((entries: HistoryEntry[]): number => {
+        if (entries.length === 0) return 0;
+
+        let streak = 0;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Ordenar por fecha descendente
+        const sortedEntries = [...entries].sort((a, b) => b.date.getTime() - a.date.getTime());
+        
+        let currentDate = new Date(today);
+        
+        for (const entry of sortedEntries) {
+            const entryDate = new Date(entry.date);
+            entryDate.setHours(0, 0, 0, 0);
+            
+            const diffDays = Math.floor((currentDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0 || diffDays === 1) {
+                streak++;
+                currentDate = new Date(entryDate);
+                currentDate.setDate(currentDate.getDate() - 1);
+            } else {
+                break;
+            }
+        }
+
+        return streak;
+    }, []);
+
+    /**
+     * Obtener la racha actual de días consecutivos
+     */
+    const streak = calculateStreak(history);
+
     return {
         history,
         latestAnalysis,
@@ -173,6 +217,7 @@ export const useHistory = (): UseHistoryReturn => {
         shouldRecommendAnalysis,
         getNextAnalysisDate,
         clearHistory,
-        isLoading
+        isLoading,
+        streak
     };
 };

@@ -186,18 +186,37 @@ const FireIcon = ({ className }: { className?: string }) => (
 );
 
 
-const StreakCard: React.FC = () => {
-    // Mock data for streak
-    const streak = 5;
+const StreakCard: React.FC<{ streak: number }> = ({ streak }) => {
+    const [prevStreak, setPrevStreak] = useState(streak);
+    const [showAnimation, setShowAnimation] = useState(false);
+
+    // Detectar cuando la racha aumenta para mostrar animación
+    useEffect(() => {
+        if (streak > prevStreak) {
+            setShowAnimation(true);
+            const timer = setTimeout(() => setShowAnimation(false), 2000);
+            return () => clearTimeout(timer);
+        }
+        setPrevStreak(streak);
+    }, [streak, prevStreak]);
 
     return (
         <div className="bg-white p-6 rounded-2xl shadow-md font-sans">
             <h3 className="text-lg font-semibold text-[#1A2E40] mb-2 font-poppins">Racha de Análisis</h3>
             <div className="flex items-center justify-center space-x-4">
-                <FireIcon className="w-12 h-12 text-[#FF7F50]"/>
-                <span className="text-5xl font-bold text-[#1A2E40] font-poppins">{streak}</span>
+                <FireIcon className={`w-12 h-12 text-[#FF7F50] ${showAnimation ? 'animate-bounce' : ''}`}/>
+                <span className={`text-5xl font-bold text-[#1A2E40] font-poppins transition-all duration-300 ${showAnimation ? 'scale-110 text-[#FF7F50]' : ''}`}>
+                    {streak}
+                </span>
                 <span className="text-lg text-[#1A2E40]/80 self-end pb-1">días</span>
             </div>
+            {showAnimation && (
+                <div className="mt-2 text-center">
+                    <span className="text-sm text-[#FF7F50] font-semibold animate-pulse">
+                        ¡Racha incrementada! 🎉
+                    </span>
+                </div>
+            )}
         </div>
     );
 };
@@ -265,8 +284,9 @@ const Dashboard: React.FC = () => {
     addNewAnalysis, 
     getTimeUntilNextAnalysis, 
     shouldRecommendAnalysis: isRecommendedAnalysis, 
-    isLoading 
-  } = useHistory();
+    isLoading,
+    streak
+  } = useHistory(false); // false = no usar datos mock, empezar con historial vacío
   
   const [isCheckupActive, setIsCheckupActive] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
@@ -283,6 +303,11 @@ const Dashboard: React.FC = () => {
     }
   }, [userProfile]);
 
+  // Efecto para detectar cambios en la racha
+  useEffect(() => {
+    console.log('🔥 Racha actualizada:', streak, 'días consecutivos');
+  }, [streak]);
+
   const handleStartCheckup = () => {
     setAnalysisResult(null); // Clear previous results
     setIsCheckupActive(true);
@@ -294,13 +319,18 @@ const Dashboard: React.FC = () => {
     setAnalysisResult(result);
     setIsCheckupActive(false);
     
+    // Registrar racha actual antes de agregar
+    const currentStreak = streak;
+    
     // Agregar inmediatamente al historial usando el hook
     addNewAnalysis(checkupData, result);
     
     console.log('Nuevo análisis agregado al historial:', {
       checkup: checkupData,
       result: result,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      previousStreak: currentStreak,
+      note: 'La racha se actualizará automáticamente al recalcularse con el nuevo historial'
     });
   };
 
@@ -399,7 +429,7 @@ const Dashboard: React.FC = () => {
             <div className="lg:col-span-1 lg:flex lg:flex-col lg:gap-6 contents lg:block">
               {/* StreakCard */}
               <div className="order-2 lg:order-none mb-6 lg:mb-0">
-                <StreakCard />
+                <StreakCard streak={streak} />
               </div>
               
               {/* Panel de Chequeo - actualizado según el riesgo */}
