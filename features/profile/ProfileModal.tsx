@@ -99,7 +99,7 @@ interface ProfileModalProps {
 }
 
 const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, profile }) => {
-  const { updateUserProfile } = useAuth();
+  const { updateUserProfile, signOut } = useAuth();
   const [formData, setFormData] = useState<Partial<UserProfile>>(profile);
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -227,7 +227,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, profile })
   };
 
   const handleLogout = () => {
-    auth.signOut();
+    // Llamamos siempre a la función signOut del hook de autenticación.
+    // Esta se encargará de limpiar el estado del usuario (real o invitado) y provocar la redirección.
+    signOut();
   };
 
   if (!isOpen) {

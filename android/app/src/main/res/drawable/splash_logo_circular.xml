@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Máscara circular -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#F0F4F8" />
+            <padding 
+                android:left="10dp"
+                android:top="10dp"
+                android:right="10dp"
+                android:bottom="10dp" />
+        </shape>
+    </item>
+    
+    <!-- Logo centrado dentro del círculo -->
+    <item 
+        android:top="15dp"
+        android:bottom="15dp"
+        android:left="15dp"
+        android:right="15dp">
+        <bitmap 
+            android:src="@drawable/splash_logo"
+            android:gravity="center" />
+    </item>
+</layer-list>

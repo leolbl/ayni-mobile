@@ -171,7 +171,7 @@ const Dashboard: React.FC = () => {
         <header className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-4">
             <img
-              src="../assets/logo.png"
+              src="/logo.png"
               alt="AyniSalud Logo"
               className="h-10 w-10 object-contain"
             />

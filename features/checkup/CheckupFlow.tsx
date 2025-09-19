@@ -60,7 +60,7 @@ const CheckupFlow: React.FC<CheckupFlowProps> = ({ onClose, onComplete }) => {
 
   return (
     <div className="fixed inset-0 bg-[#F0F4F8] z-50 flex flex-col p-4 sm:p-6 lg:p-8">
-      <div className="w-full max-w-2xl mx-auto flex-grow flex flex-col">
+      <div className="w-full max-w-2xl mx-auto h-full flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-[#1A2E40] font-poppins">Chequeo de Bienestar</h1>
@@ -71,7 +71,7 @@ const CheckupFlow: React.FC<CheckupFlowProps> = ({ onClose, onComplete }) => {
         <ProgressBar progress={progress} />
 
         {/* Step Content */}
-        <div className="flex-grow mt-6 overflow-y-auto">
+        <div className="flex-grow mt-6 overflow-y-auto min-h-0">
             {currentStep === 1 && (
                 <GeneralFeelingStep 
                     data={checkupData.generalFeeling!}

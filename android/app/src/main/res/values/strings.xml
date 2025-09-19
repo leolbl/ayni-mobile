@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">aynisalud</string>
-    <string name="title_activity_main">aynisalud</string>
-    <string name="package_name">com.allyoursystems.ayni</string>
-    <string name="custom_url_scheme">com.allyoursystems.ayni</string>
+    <string name="app_name">AyniSalud</string>
+    <string name="title_activity_main">AyniSalud</string>
+    <string name="package_name">com.aynisalud.app</string>
+    <string name="custom_url_scheme">com.aynisalud.app</string>
 </resources>

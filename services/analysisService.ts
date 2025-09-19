@@ -1,14 +1,16 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { UserProfile, AnalysisResult, Checkup } from '../types';
+import getConfig from '../lib/config';
 
-// Asumir que process.env.GEMINI_API_KEY está configurado en el entorno
-const API_KEY = process.env.GEMINI_API_KEY;
+// Obtener configuración según la plataforma
+const config = getConfig();
+const API_KEY = config.geminiApiKey;
 
-if (!API_KEY) {
-  console.error("La clave de API de Gemini no está configurada. Por favor, establece la variable de entorno GEMINI_API_KEY.");
+if (!API_KEY || API_KEY === 'TU_API_KEY_DE_GEMINI_PARA_MOVIL') {
+  console.error(`La clave de API de Gemini no está configurada para ${config.platform}. ${config.isNative ? 'Por favor, configura la API key en lib/config.ts' : 'Por favor, establece la variable de entorno GEMINI_API_KEY.'}`);
 }
 
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
+const ai = API_KEY && API_KEY !== 'TU_API_KEY_DE_GEMINI_PARA_MOVIL' ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 
 const responseSchema = {
   type: Type.OBJECT,
@@ -16,32 +18,46 @@ const responseSchema = {
     riskLevel: {
       type: Type.STRING,
       enum: ["normal", "warning", "alert"],
-      description: "Nivel de riesgo: 'normal' para estado saludable, 'warning' para situaciones que requieren seguimiento, 'alert' para casos que necesitan atención médica urgente."
+      description: "Nivel de riesgo basado en análisis integral: 'normal' para estado saludable sin banderas rojas, 'warning' para situaciones que requieren monitoreo o seguimiento, 'alert' para casos que necesitan atención médica urgente o inmediata."
     },
     explanation: {
       type: Type.STRING,
-      description: "Explicación clara, empática y en términos sencillos del estado de salud actual. Debe incluir una breve justificación del nivel de riesgo asignado, considerando los hallazgos más relevantes. Máximo 150 palabras."
+      description: "Explicación médica clara y empática del estado actual, contextualizada con el perfil específico del paciente. Debe incluir justificación del nivel de riesgo, correlaciones importantes y referencias al historial médico cuando sea relevante. 200-300 palabras."
     },
     recommendations: {
       type: Type.ARRAY,
       items: { 
         type: Type.STRING,
-        description: "Recomendación específica y accionable con plazo temporal cuando sea relevante"
+        description: "Recomendación específica, personalizada y accionable con plazo temporal preciso"
       },
-      description: "Lista de 2-3 recomendaciones priorizadas, específicas y accionables. Deben incluir plazos cuando sea apropiado (ej: 'en las próximas 24 horas', 'esta semana', 'en tu próxima cita médica')."
+      description: "Lista de 3-4 recomendaciones priorizadas y personalizadas según el perfil del paciente. Deben incluir plazos específicos, considerar condiciones preexistentes y ser culturalmente apropiadas."
     },
     keyFindings: {
       type: Type.ARRAY,
       items: { type: Type.STRING },
-      description: "Lista de 1-3 hallazgos más significativos que influyeron en la evaluación (ej: 'Presión arterial elevada', 'Síntomas compatibles con resfriado común', 'Signos vitales normales para la edad')"
+      description: "Lista de 2-4 hallazgos clínicos más significativos que influyeron en la evaluación, con contexto del perfil del paciente (ej: 'Presión arterial 150/95 mmHg - elevada para edad y sin medicación antihipertensiva')"
     },
     urgencyLevel: {
       type: Type.STRING,
       enum: ["routine", "priority", "urgent"],
-      description: "Nivel de urgencia para buscar atención médica: 'routine' para seguimiento normal, 'priority' para atención en días, 'urgent' para atención inmediata"
+      description: "Nivel de urgencia personalizado: 'routine' para seguimiento normal en próxima cita programada, 'priority' para atención en 3-7 días considerando factores de riesgo específicos, 'urgent' para atención en 24-48 horas o inmediata"
+    },
+    personalizedInsights: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: "Lista de 2-3 insights personalizados que conectan los hallazgos actuales con el historial médico, estilo de vida y factores de riesgo específicos del paciente."
+    },
+    riskFactors: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: "Lista de factores de riesgo específicos identificados basados en la combinación de datos actuales y perfil histórico del paciente."
+    },
+    followUpPlan: {
+      type: Type.STRING,
+      description: "Plan de seguimiento personalizado que considera las condiciones crónicas, medicación actual y factores de estilo de vida del paciente. Debe incluir frecuencia recomendada de monitoreo y parámetros específicos a vigilar."
     }
   },
-  required: ["riskLevel", "explanation", "recommendations", "keyFindings", "urgencyLevel"]
+  required: ["riskLevel", "explanation", "recommendations", "keyFindings", "urgencyLevel", "personalizedInsights", "riskFactors", "followUpPlan"]
 };
 
 function calculateAge(birthDateString: string): number {
@@ -60,17 +76,20 @@ export const getCheckupAnalysis = async (
   checkup: Checkup,
   userProfile: UserProfile
 ): Promise<AnalysisResult> => {
-  if (!API_KEY) {
+  if (!API_KEY || API_KEY === 'TU_API_KEY_DE_GEMINI_PARA_MOVIL' || !ai) {
     // Devolver una respuesta de prueba si la clave de API no está disponible
     return {
       riskLevel: "warning",
-      explanation: "Clave de API no configurada. Esta es una respuesta de prueba. Por favor, busca consejo médico profesional para cualquier preocupación de salud.",
+      explanation: `Clave de API no configurada para ${config.platform}. Esta es una respuesta de prueba. Por favor, busca consejo médico profesional para cualquier preocupación de salud.`,
       recommendations: [
         "Consulta a un médico por cualquier preocupación de salud.", 
         "Este servicio es solo para fines informativos y no sustituye atención médica."
       ],
-      keyFindings: ["Sistema en modo de prueba - API no configurada"],
-      urgencyLevel: "routine"
+      keyFindings: [`Sistema en modo de prueba - API no configurada para ${config.platform}`],
+      urgencyLevel: "routine",
+      personalizedInsights: ["Sistema en modo de desarrollo - configura la API de Gemini para obtener análisis personalizados"],
+      riskFactors: ["Configuración técnica pendiente"],
+      followUpPlan: "Una vez configurado el sistema, podrás recibir análisis médicos detallados y personalizados basados en tu perfil de salud completo."
     };
   }
 
@@ -93,68 +112,131 @@ export const getCheckupAnalysis = async (
   const age = calculateAge(userProfile.birthDate);
 
   const prompt = `
-    Eres un asistente médico especializado en triaje y evaluación de riesgo. Analiza cuidadosamente el siguiente perfil de salud y datos de chequeo para proporcionar una evaluación precisa y empática.
+SISTEMA DE ANÁLISIS MÉDICO INTELIGENTE - TRIAJE AVANZADO Y EVALUACIÓN DE RIESGO
+================================================================================
 
-    **CONTEXTO DEL PACIENTE:**
-    Paciente: ${userProfile.sex}, ${age} años
-    Antropometría: ${userProfile.height}cm, ${userProfile.weight}kg (IMC: ${bmi.toFixed(1)})
-    
-    **HISTORIAL MÉDICO RELEVANTE:**
-    • Condiciones crónicas activas: ${userProfile.chronicConditions.length ? userProfile.chronicConditions.join(', ') : 'Ninguna registrada'}
-    • Alergias conocidas: ${userProfile.allergies.length ? userProfile.allergies.join(', ') : 'Ninguna registrada'}
-    • Cirugías/enfermedades previas: ${userProfile.surgeriesOrPastIllnesses.length ? userProfile.surgeriesOrPastIllnesses.join(', ') : 'Ninguna registrada'}
-    • Medicación actual: ${userProfile.medicationsAndSupplements.length ? userProfile.medicationsAndSupplements.join(', ') : 'Ninguna'}
-    
-    **FACTORES DE ESTILO DE VIDA:**
-    • Tabaquismo: ${userProfile.smokingStatus || 'No especificado'}
-    • Alcohol: ${userProfile.alcoholConsumption || 'No especificado'}
-    • Ejercicio: ${userProfile.exerciseFrequency || 'No especificado'}
-    • Sustancias: ${userProfile.drugConsumption || 'No especificado'}
+**ROL Y CONTEXTO:**
+Actúas como un sistema de inteligencia artificial médica especializado en triaje, evaluación de riesgo y análisis integral de salud. Tu función es proporcionar evaluaciones clínicas precisas, contextualizadas y culturalmente apropiadas para población hispanohablante.
 
-    **EVALUACIÓN ACTUAL (${new Date().toLocaleDateString()}):**
-    
-    Estado subjetivo: ${checkup.generalFeeling.scale}/5 (donde 5 = excelente)
-    Descriptores: ${checkup.generalFeeling.tags.length ? checkup.generalFeeling.tags.join(', ') : 'Sin descriptores específicos'}
-    
-    Signos vitales registrados:
-    ${vitalsReport}
-    
-    Sintomatología reportada:
-    ${symptomsReport}
+**PERFIL DEL PACIENTE:**
+Identificación: ${userProfile.sex === 'male' ? 'Hombre' : userProfile.sex === 'female' ? 'Mujer' : 'Persona'}, ${age} años
+Nombre: ${userProfile.name}
+Antropometría: ${userProfile.height}cm, ${userProfile.weight}kg 
+Índice de Masa Corporal: ${bmi.toFixed(1)} kg/m² ${bmi < 18.5 ? '(Bajo peso)' : bmi < 25 ? '(Normal)' : bmi < 30 ? '(Sobrepeso)' : '(Obesidad)'}
 
-    **INSTRUCCIONES DE EVALUACIÓN:**
-    
-    1. ANALIZA INTEGRALMENTE considerando:
-       - Correlación entre síntomas y signos vitales
-       - Factores de riesgo del historial médico
-       - Edad y contexto demográfico
-       - Interacciones potenciales con medicación actual
-    
-    2. CLASIFICACIÓN DE RIESGO:
-       • "normal": Parámetros dentro de rangos esperados, sin señales de alarma
-       • "warning": Anomalías leves o factores de riesgo que requieren seguimiento
-       • "alert": Signos de alarma que requieren atención médica urgente
-    
-    3. CRITERIOS ESPECÍFICOS DE ALERTA:
-       - Dolor torácico (especialmente >7/10 o con factores de riesgo cardiovascular)
-       - Dificultad respiratoria significativa
-       - Signos vitales críticos (FC >120 o <50, Temp >38.5°C, SpO2 <90%, PA sistólica >180 o <90)
-       - Síntomas neurológicos agudos
-       - Dolor abdominal severo con signos de alarma
-    
-    4. COMUNICACIÓN:
-       - Usa lenguaje empático y comprensible
-       - Evita terminología médica compleja
-       - Proporciona contexto tranquilizador cuando sea apropiado
-       - Enfatiza cuándo buscar atención inmediata vs. seguimiento rutinario
-    
-    5. RECOMENDACIONES ACCIONABLES:
-       - Máximo 3 recomendaciones priorizadas
-       - Incluye plazos específicos cuando sea relevante
-       - Considera recursos de atención disponibles
-       - Incluye medidas de autocuidado apropiadas
+**HISTORIAL CLÍNICO INTEGRAL:**
 
-    RESPONDE ÚNICAMENTE con un objeto JSON válido que cumpla exactamente el esquema proporcionado. No incluyas texto adicional, explicaciones o formato markdown.
+🏥 CONDICIONES MÉDICAS ACTIVAS:
+${userProfile.chronicConditions.length && !userProfile.chronicConditions.includes('Ninguna') 
+  ? userProfile.chronicConditions.map(condition => `   • ${condition} - Condición crónica que requiere manejo continuo`).join('\n')
+  : '   • Sin condiciones crónicas conocidas registradas'}
+
+💊 FARMACOTERAPIA ACTUAL:
+${userProfile.medicationsAndSupplements.length && !userProfile.medicationsAndSupplements.includes('Ninguno')
+  ? userProfile.medicationsAndSupplements.map(med => `   • ${med} - Considerar interacciones y efectos sobre signos vitales`).join('\n') 
+  : '   • Sin medicación actual reportada'}
+
+🚨 ALERGIAS Y CONTRAINDICACIONES:
+${userProfile.allergies.length && !userProfile.allergies.includes('Ninguna')
+  ? userProfile.allergies.map(allergy => `   • ${allergy} - Alergia conocida`).join('\n')
+  : '   • Sin alergias conocidas registradas'}
+
+📋 ANTECEDENTES QUIRÚRGICOS/PATOLÓGICOS:
+${userProfile.surgeriesOrPastIllnesses.length && !userProfile.surgeriesOrPastIllnesses.includes('Ninguna')
+  ? userProfile.surgeriesOrPastIllnesses.map(surgery => `   • ${surgery} - Antecedente relevante para evaluación actual`).join('\n')
+  : '   • Sin antecedentes quirúrgicos o patológicos significativos'}
+
+**FACTORES DE RIESGO Y ESTILO DE VIDA:**
+🚬 Tabaquismo: ${userProfile.smokingStatus === 'current' ? '⚠️ FUMADOR ACTIVO - Factor de riesgo cardiovascular y respiratorio significativo' :
+                 userProfile.smokingStatus === 'former' ? 'Ex-fumador - Riesgo residual presente' :
+                 userProfile.smokingStatus === 'never' ? 'No fumador - Factor protector' : 'No especificado'}
+
+🍷 Alcohol: ${userProfile.alcoholConsumption === 'heavy' ? '⚠️ CONSUMO ELEVADO - Evaluar hepatotoxicidad y interacciones' :
+              userProfile.alcoholConsumption === 'moderate' ? 'Consumo moderado - Evaluar en contexto de medicación' :
+              userProfile.alcoholConsumption === 'light' ? 'Consumo ligero - Generalmente aceptable' :
+              userProfile.alcoholConsumption === 'none' ? 'Abstinencia total - Factor protector' : 'No especificado'}
+
+🏃‍♂️ Actividad Física: ${userProfile.exerciseFrequency === 'frequently' ? 'Alta frecuencia - Factor cardioprotector importante' :
+                        userProfile.exerciseFrequency === 'regularly' ? 'Regular - Factor protector moderado' :
+                        userProfile.exerciseFrequency === 'rarely' ? '⚠️ Sedentarismo parcial - Factor de riesgo' :
+                        userProfile.exerciseFrequency === 'never' ? '⚠️ SEDENTARISMO COMPLETO - Factor de riesgo significativo' : 'No especificado'}
+
+💊 Sustancias: ${userProfile.drugConsumption === 'regularly' ? '⚠️ USO REGULAR - Factor de riesgo alto, evaluar interacciones' :
+                userProfile.drugConsumption === 'rarely' ? '⚠️ Uso ocasional - Considerar en evaluación' :
+                userProfile.drugConsumption === 'none' ? 'Sin uso - Factor protector' :
+                userProfile.drugConsumption === 'prefer_not_to_say' ? 'Información no proporcionada - Mantener consideración clínica' : 'No especificado'}
+
+**EVALUACIÓN CLÍNICA ACTUAL - ${new Date().toLocaleDateString('es-ES')}:**
+
+📊 ESTADO SUBJETIVO REPORTADO:
+• Escala de bienestar: ${checkup.generalFeeling.scale}/5 ${checkup.generalFeeling.scale <= 2 ? '(⚠️ ESTADO CRÍTICO)' : 
+                                                        checkup.generalFeeling.scale === 3 ? '(Estado neutro)' : 
+                                                        checkup.generalFeeling.scale >= 4 ? '(Estado positivo)' : ''}
+• Descriptores específicos: ${checkup.generalFeeling.tags.length ? checkup.generalFeeling.tags.join(', ') : 'Sin descriptores específicos proporcionados'}
+
+🩺 SIGNOS VITALES OBJETIVOS:
+${vitalsReport === 'No proporcionado' ? '⚠️ DATOS VITALES FALTANTES - Limita precisión del análisis' : vitalsReport}
+
+🎯 SINTOMATOLOGÍA ESPECÍFICA:
+${symptomsReport}
+
+**CRITERIOS DE EVALUACIÓN ESPECIALIZADA:**
+
+🔴 ALGORITMO DE ALERTA ROJA (Derivación urgente):
+• Dolor torácico con factores de riesgo cardiovascular
+• Disnea significativa (especialmente con antecedentes cardiopulmonares)
+• Signos vitales críticos: FC >120/<50, T >38.5°C, SpO2 <90%, PAS >180/<90 mmHg
+• Síntomas neurológicos agudos o alteración de conciencia
+• Dolor abdominal severo con signos de alarma
+• Interacciones medicamentosas peligrosas identificadas
+
+🟡 CRITERIOS DE PRIORIDAD (Seguimiento 3-7 días):
+• Síntomas persistentes sin mejoría en pacientes con comorbilidades
+• Factores de riesgo múltiples con síntomas inespecíficos
+• Pacientes con condiciones crónicas descompensadas
+• Efectos adversos medicamentosos sospechados
+
+🟢 SEGUIMIENTO RUTINARIO:
+• Parámetros dentro de rangos normales para edad y comorbilidades
+• Síntomas menores autolimitados
+• Controles preventivos recomendados
+
+**CONSIDERACIONES ESPECIALES SEGÚN PERFIL:**
+
+${age >= 65 ? '👴 PACIENTE GERIÁTRICO: Aplicar criterios de fragilidad, considerar polifarmacia y síndromes geriátricos.' : ''}
+${age <= 18 ? '👶 PACIENTE PEDIÁTRICO: Aplicar parámetros normales específicos para edad.' : ''}
+${userProfile.sex === 'female' && age >= 15 && age <= 55 ? '♀️ MUJER EN EDAD REPRODUCTIVA: Considerar ciclo menstrual, embarazo potencial.' : ''}
+${userProfile.chronicConditions.some(c => c.toLowerCase().includes('diabet')) ? '🩸 PACIENTE DIABÉTICO: Evaluar control glucémico, riesgo cardiovascular aumentado.' : ''}
+${userProfile.chronicConditions.some(c => c.toLowerCase().includes('hiperten')) ? '💓 PACIENTE HIPERTENSO: Evaluar control tensional, riesgo cardiovascular.' : ''}
+${userProfile.chronicConditions.some(c => c.toLowerCase().includes('cardía')) ? '❤️ PACIENTE CARDIOPATA: Monitoreo cardiovascular estrecho requerido.' : ''}
+
+**INSTRUCCIONES DE ANÁLISIS INTEGRAL:**
+
+1. **CORRELACIÓN CLÍNICA**: Analiza correlaciones entre síntomas actuales, signos vitales, y antecedentes médicos específicos del paciente.
+
+2. **ESTRATIFICACIÓN DE RIESGO**: Utiliza scoring clínico considerando edad, comorbilidades, medicación y factores de estilo de vida.
+
+3. **PERSONALIZACIÓN CULTURAL**: Proporciona recomendaciones culturalmente apropiadas para población hispanohablante.
+
+4. **MEDICINA PREVENTIVA**: Integra recomendaciones preventivas específicas para el perfil de riesgo identificado.
+
+5. **SEGUIMIENTO ESTRUCTURADO**: Establece plan de monitoreo considerando recursos de salud disponibles y accesibilidad.
+
+6. **EDUCACIÓN AL PACIENTE**: Incluye elementos educativos para empoderamiento del paciente en su autocuidado.
+
+**COMUNICACIÓN CLÍNICA:**
+• Utiliza terminología médica precisa pero accesible
+• Proporciona contexto tranquilizador cuando sea clínicamente apropiado
+• Enfatiza la importancia del seguimiento médico profesional
+• Incluye señales de alarma específicas para retorno urgente
+• Considera el impacto psicológico de la información proporcionada
+
+**LIMITACIONES Y DISCLAIMERS:**
+• Este análisis es complementario, no sustituto del juicio clínico profesional
+• Requiere correlación con exploración física y pruebas complementarias según criterio médico
+• Las recomendaciones deben adaptarse a recursos locales de salud disponibles
+
+PROPORCIONA tu análisis en formato JSON estructurado según el esquema requerido, integrando toda esta información de manera coherente y profesional.
   `;
 
   try {
@@ -170,7 +252,7 @@ export const getCheckupAnalysis = async (
     const jsonText = response.text.trim();
     const result = JSON.parse(jsonText);
     
-    if (result.riskLevel && result.explanation && result.recommendations && result.keyFindings && result.urgencyLevel) {
+    if (result.riskLevel && result.explanation && result.recommendations && result.keyFindings && result.urgencyLevel && result.personalizedInsights && result.riskFactors && result.followUpPlan) {
         return result as AnalysisResult;
     } else {
         throw new Error("Parsed JSON does not match the expected format.");
@@ -187,7 +269,10 @@ export const getCheckupAnalysis = async (
         'Intenta realizar el chequeo nuevamente más tarde.'
       ],
       keyFindings: ["Error técnico en el análisis"],
-      urgencyLevel: "routine"
+      urgencyLevel: "routine",
+      personalizedInsights: ["Sistema experimentó error técnico - consulta médico si tienes inquietudes"],
+      riskFactors: ["Error de conectividad o procesamiento"],
+      followUpPlan: "Intenta realizar el análisis nuevamente más tarde. Si persisten los problemas técnicos, contacta soporte o consulta directamente con un profesional de salud."
     };
   }
 };
