@@ -6,12 +6,73 @@ import { AnalysisResultCard } from './components/AnalysisResultCard';
 import CheckupFlow from '../checkup/CheckupFlow';
 import ProfileModal from '../profile/ProfileModal';
 import AnalysisHistoryPage from './AnalysisHistoryPage';
+import HealthRiskDetailsModal from './components/HealthRiskDetailsModal';
 import { mockHistoryData } from '../../data/mockHistoryData';
+import { assessHealthRisk, calculateNextAnalysisDate, shouldRecommendAnalysis, HealthRiskAssessment } from '../../services/healthRiskService';
 
-const CountdownCard: React.FC = () => {
+const CountdownCard: React.FC<{ userProfile: any; onShowRiskDetails?: () => void }> = ({ userProfile, onShowRiskDetails }) => {
+    const [healthAssessment, setHealthAssessment] = useState<HealthRiskAssessment | null>(null);
+
+    useEffect(() => {
+        if (userProfile) {
+            const assessment = assessHealthRisk(userProfile);
+            setHealthAssessment(assessment);
+        }
+    }, [userProfile]);
+
     const calculateTimeLeft = () => {
-        const nextCheckupDate = new Date();
-        nextCheckupDate.setDate(nextCheckupDate.getDate() + 7); // Set next checkup 7 days from now
+        if (!userProfile) {
+            // Fallback al comportamiento anterior si no hay datos
+            const nextCheckupDate = new Date();
+            nextCheckupDate.setDate(nextCheckupDate.getDate() + 7);
+            const difference = +nextCheckupDate - +new Date();
+            let timeLeft: { [key: string]: number } = {};
+
+            if (difference > 0) {
+                timeLeft = {
+                    days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+                    hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+                    minutes: Math.floor((difference / 1000 / 60) % 60),
+                };
+            }
+            return timeLeft;
+        }
+
+        // Usar la frecuencia específica del último análisis realizado
+        let recommendedFrequency = 7; // Default fallback
+        let lastAnalysisDate = new Date();
+        
+        if (mockHistoryData.length > 0) {
+            const lastAnalysis = mockHistoryData[0];
+            lastAnalysisDate = lastAnalysis.date;
+            
+            // Usar la frecuencia específica recomendada en el último análisis
+            if (lastAnalysis.result.recommendedFrequencyDays) {
+                recommendedFrequency = lastAnalysis.result.recommendedFrequencyDays;
+            } else {
+                // Fallback basado en el nivel de riesgo del último análisis
+                switch (lastAnalysis.result.riskLevel) {
+                    case 'alert':
+                        recommendedFrequency = 2;
+                        break;
+                    case 'warning':
+                        recommendedFrequency = 5;
+                        break;
+                    case 'normal':
+                    default:
+                        recommendedFrequency = 14;
+                        break;
+                }
+            }
+        } else {
+            // Si no hay historial, usar la evaluación del perfil del usuario
+            if (healthAssessment) {
+                recommendedFrequency = healthAssessment.recommendedAnalysisFrequency;
+            }
+        }
+
+        const nextCheckupDate = new Date(lastAnalysisDate);
+        nextCheckupDate.setDate(nextCheckupDate.getDate() + recommendedFrequency);
         const difference = +nextCheckupDate - +new Date();
         let timeLeft: { [key: string]: number } = {};
 
@@ -28,28 +89,140 @@ const CountdownCard: React.FC = () => {
     const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
 
     useEffect(() => {
-        const timer = setTimeout(() => {
+        // Actualizar cada minuto para mostrar un contador en tiempo real
+        const timer = setInterval(() => {
             setTimeLeft(calculateTimeLeft());
-        }, 1000 * 60); // Update every minute
+        }, 60000); // Cada 60 segundos
 
-        return () => clearTimeout(timer);
-    });
+        return () => clearInterval(timer);
+    }, [userProfile, healthAssessment]); // Recalcular cuando cambie el perfil o la evaluación
+
+    // También actualizar inmediatamente cuando cambien las dependencias
+    useEffect(() => {
+        setTimeLeft(calculateTimeLeft());
+    }, [userProfile, healthAssessment]);
+
+    const getRiskLevelStyles = (lastAnalysisRisk?: string) => {
+        // Usar el riesgo del último análisis si está disponible, sino el del perfil actual
+        const riskToUse = mockHistoryData.length > 0 ? mockHistoryData[0].result.riskLevel : healthAssessment?.riskLevel;
+        
+        switch (riskToUse) {
+            case 'alert':
+                return {
+                    bgColor: 'bg-red-50',
+                    borderColor: 'border-red-200',
+                    textColor: 'text-red-700',
+                    accentColor: 'text-red-600',
+                    pulseClass: 'animate-pulse'
+                };
+            case 'warning':
+                return {
+                    bgColor: 'bg-orange-50',
+                    borderColor: 'border-orange-200',
+                    textColor: 'text-orange-700',
+                    accentColor: 'text-orange-600',
+                    pulseClass: ''
+                };
+            case 'normal':
+            default:
+                return {
+                    bgColor: 'bg-green-50',
+                    borderColor: 'border-green-200',
+                    textColor: 'text-green-700',
+                    accentColor: 'text-green-600',
+                    pulseClass: ''
+                };
+        }
+    };
+
+    const styles = getRiskLevelStyles();
+    const isUrgent = Object.keys(timeLeft).length === 0 || timeLeft.days === 0;
+    
+    // Obtener información de frecuencia del último análisis
+    const getFrequencyInfo = () => {
+        if (mockHistoryData.length > 0) {
+            const lastAnalysis = mockHistoryData[0];
+            const frequency = lastAnalysis.result.recommendedFrequencyDays || 7;
+            const riskLevel = lastAnalysis.result.riskLevel;
+            return { frequency, riskLevel, source: 'analysis' };
+        } else if (healthAssessment) {
+            return { 
+                frequency: healthAssessment.recommendedAnalysisFrequency, 
+                riskLevel: healthAssessment.riskLevel, 
+                source: 'profile' 
+            };
+        }
+        return { frequency: 7, riskLevel: 'normal', source: 'default' };
+    };
+
+    const frequencyInfo = getFrequencyInfo();
 
     return (
-        <div className="bg-white p-6 rounded-2xl shadow-md flex flex-col justify-center items-center text-center h-full font-sans">
-            <h3 className="text-lg lg:text-xl font-semibold text-[#1A2E40]/80 mb-1 font-poppins">Próximo Análisis Recomendado</h3>
-            {Object.keys(timeLeft).length > 0 ? (
+        <div className={`${styles.bgColor} p-6 rounded-2xl shadow-md border-2 ${styles.borderColor} flex flex-col justify-center items-center text-center h-full font-sans ${styles.pulseClass}`}>
+            <h3 className={`text-lg lg:text-xl font-semibold ${styles.textColor} mb-1 font-poppins`}>
+                Próximo Análisis Recomendado
+            </h3>
+            
+            <div className={`text-sm ${styles.textColor} mb-2 px-3 py-1 rounded-full ${styles.bgColor} border ${styles.borderColor}`}>
+                {frequencyInfo.source === 'analysis' ? 
+                    `Basado en tu último análisis: Cada ${frequencyInfo.frequency} día${frequencyInfo.frequency !== 1 ? 's' : ''}` :
+                    `Basado en tu perfil: Cada ${frequencyInfo.frequency} día${frequencyInfo.frequency !== 1 ? 's' : ''}`
+                }
+            </div>
+
+            {Object.keys(timeLeft).length > 0 && !isUrgent ? (
                 <>
                     <div className="flex items-baseline my-2">
-                        <span className="text-8xl lg:text-9xl font-bold text-[#2A787A] tracking-tighter font-poppins">{timeLeft.days}</span>
-                        <span className="text-2xl lg:text-3xl font-semibold text-[#1A2E40] ml-2">días</span>
+                        <span className={`text-8xl lg:text-9xl font-bold ${styles.accentColor} tracking-tighter font-poppins`}>
+                            {timeLeft.days}
+                        </span>
+                        <span className={`text-2xl lg:text-3xl font-semibold ${styles.textColor} ml-2`}>
+                            día{timeLeft.days !== 1 ? 's' : ''}
+                        </span>
                     </div>
-                    <div className="text-base lg:text-lg text-slate-500">
+                    <div className={`text-base lg:text-lg ${styles.textColor} flex items-center justify-center`}>
+                        <span className="mr-2">⏱️</span>
                         {timeLeft.hours} horas, {timeLeft.minutes} minutos
+                        <span className="ml-2 animate-pulse">⏳</span>
                     </div>
                 </>
             ) : (
-                <span className="text-2xl font-bold text-green-600 mt-4">¡Es hora de tu chequeo!</span>
+                <div className="my-4">
+                    <span className="text-2xl font-bold text-red-600 animate-pulse">
+                        ¡Es hora de tu chequeo!
+                    </span>
+                    <p className="text-sm text-red-600 mt-2 font-medium">
+                        {frequencyInfo.riskLevel === 'alert' ? 
+                            'Tu último análisis requiere seguimiento inmediato' :
+                            'Según tu última evaluación, es momento de un nuevo análisis'
+                        }
+                    </p>
+                </div>
+            )}
+
+            {(frequencyInfo.source === 'analysis' && mockHistoryData.length > 0) && (
+                <div className={`text-xs ${styles.textColor} mt-4 text-center max-w-md`}>
+                    <p className="font-medium mb-1">
+                        Último análisis: {new Intl.DateTimeFormat('es-ES', { 
+                            day: 'numeric',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }).format(mockHistoryData[0].date)}
+                    </p>
+                    <p className="opacity-80">
+                        Riesgo detectado: {mockHistoryData[0].result.riskLevel === 'normal' ? 'Normal' :
+                                          mockHistoryData[0].result.riskLevel === 'warning' ? 'Advertencia' : 'Alerta'}
+                    </p>
+                    {onShowRiskDetails && (
+                        <button 
+                            onClick={onShowRiskDetails}
+                            className={`text-xs ${styles.accentColor} hover:underline mt-1 font-medium`}
+                        >
+                            Ver detalles del análisis
+                        </button>
+                    )}
+                </div>
             )}
         </div>
     );
@@ -139,7 +312,16 @@ const Dashboard: React.FC = () => {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [showHistoryPage, setShowHistoryPage] = useState(false);
+  const [healthAssessment, setHealthAssessment] = useState<HealthRiskAssessment | null>(null);
+  const [showRiskDetailsModal, setShowRiskDetailsModal] = useState(false);
   
+  useEffect(() => {
+    if (userProfile) {
+      const assessment = assessHealthRisk(userProfile);
+      setHealthAssessment(assessment);
+    }
+  }, [userProfile]);
+
   const handleStartCheckup = () => {
     setAnalysisResult(null); // Clear previous results
     setIsCheckupActive(true);
@@ -158,12 +340,26 @@ const Dashboard: React.FC = () => {
     setShowHistoryPage(false);
   };
 
+  const handleShowRiskDetails = () => {
+    setShowRiskDetailsModal(true);
+  };
+
+  const handleCloseRiskDetails = () => {
+    setShowRiskDetailsModal(false);
+  };
+
   // Si se está mostrando el historial, renderizar solo esa pantalla
   if (showHistoryPage) {
     return <AnalysisHistoryPage onBack={handleBackFromHistory} />;
   }
 
   const greeting = `¡Hola, ${userProfile?.name?.split(' ')[0] || 'Usuario'}!`;
+
+  // Determinar si se debe mostrar una recomendación urgente
+  const isAnalysisRecommended = userProfile && shouldRecommendAnalysis(
+    userProfile, 
+    mockHistoryData.length > 0 ? mockHistoryData[0].date : undefined
+  );
 
   return (
     <>
@@ -177,7 +373,12 @@ const Dashboard: React.FC = () => {
             />
             <div>
               <h1 className="text-3xl font-bold text-[#1A2E40] font-poppins">{greeting}</h1>
-              <p className="text-[#1A2E40]/80 mt-1">¿Cómo te sientes hoy?</p>
+              <p className="text-[#1A2E40]/80 mt-1">
+                {healthAssessment ? 
+                  `${healthAssessment.personalizedMessage.slice(0, 60)}...` : 
+                  '¿Cómo te sientes hoy?'
+                }
+              </p>
             </div>
           </div>
           <button
@@ -189,12 +390,33 @@ const Dashboard: React.FC = () => {
           </button>
         </header>
 
+        {/* Alerta de análisis recomendado si es urgente */}
+        {isAnalysisRecommended && healthAssessment?.riskLevel === 'critical' && (
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded-r-lg">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">
+                  Análisis Crítico Recomendado
+                </h3>
+                <p className="mt-1 text-sm text-red-700">
+                  Tu perfil de salud requiere monitoreo frecuente. Te recomendamos realizar un análisis ahora.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <main className="flex flex-col lg:block">
           {/* Grid container solo para desktop, flex container para móvil */}
           <div className="lg:grid lg:grid-cols-3 gap-6 mb-8 flex flex-col lg:flex-none">
             {/* CountdownCard */}
             <div className="lg:col-span-2 order-1 lg:order-none">
-              <CountdownCard />
+              <CountdownCard userProfile={userProfile} onShowRiskDetails={handleShowRiskDetails} />
             </div>
             
             {/* Contenedor de la columna derecha en desktop, elementos separados en móvil */}
@@ -204,12 +426,34 @@ const Dashboard: React.FC = () => {
                 <StreakCard />
               </div>
               
-              {/* Panel de Chequeo - antes que historial en móvil */}
-              <div className="order-3 lg:order-none mb-6 lg:mb-6 bg-[#2A787A] p-8 rounded-2xl text-white shadow-lg text-center md:text-left">
-                <h2 className="text-2xl font-bold font-poppins">Chequeo de Salud</h2>
-                <p className="mt-2 mb-6 opacity-90">Obtén un análisis rápido de tus síntomas para entender el nivel de riesgo potencial.</p>
-                <button onClick={handleStartCheckup} className="bg-white text-[#2A787A] font-bold py-3 px-6 rounded-lg hover:bg-slate-100 transition-transform transform hover:scale-105">
-                  Iniciar Chequeo de Bienestar
+              {/* Panel de Chequeo - actualizado según el riesgo */}
+              <div className={`order-3 lg:order-none mb-6 lg:mb-6 p-8 rounded-2xl text-white shadow-lg text-center md:text-left ${
+                healthAssessment?.riskLevel === 'critical' ? 'bg-red-600' :
+                healthAssessment?.riskLevel === 'high' ? 'bg-orange-500' :
+                healthAssessment?.riskLevel === 'moderate' ? 'bg-yellow-500' :
+                'bg-[#2A787A]'
+              }`}>
+                <h2 className="text-2xl font-bold font-poppins">
+                  {isAnalysisRecommended ? 'Análisis Recomendado' : 'Chequeo de Salud'}
+                </h2>
+                <p className="mt-2 mb-6 opacity-90">
+                  {healthAssessment?.riskLevel === 'critical' ? 
+                    'Tu perfil requiere monitoreo frecuente para tu seguridad.' :
+                    healthAssessment?.riskLevel === 'high' ?
+                    'Tu perfil sugiere realizar análisis con mayor frecuencia.' :
+                    'Obtén un análisis rápido de tus síntomas para entender el nivel de riesgo potencial.'
+                  }
+                </p>
+                <button 
+                  onClick={handleStartCheckup} 
+                  className={`bg-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 ${
+                    healthAssessment?.riskLevel === 'critical' ? 'text-red-600 hover:bg-red-50' :
+                    healthAssessment?.riskLevel === 'high' ? 'text-orange-500 hover:bg-orange-50' :
+                    healthAssessment?.riskLevel === 'moderate' ? 'text-yellow-600 hover:bg-yellow-50' :
+                    'text-[#2A787A] hover:bg-slate-100'
+                  }`}
+                >
+                  {isAnalysisRecommended ? 'Realizar Análisis Ahora' : 'Iniciar Chequeo de Bienestar'}
                 </button>
               </div>
               
@@ -241,6 +485,14 @@ const Dashboard: React.FC = () => {
           isOpen={isProfileModalOpen}
           onClose={() => setIsProfileModalOpen(false)}
           profile={userProfile}
+        />
+      )}
+
+      {showRiskDetailsModal && healthAssessment && (
+        <HealthRiskDetailsModal
+          isOpen={showRiskDetailsModal}
+          onClose={handleCloseRiskDetails}
+          assessment={healthAssessment}
         />
       )}
 

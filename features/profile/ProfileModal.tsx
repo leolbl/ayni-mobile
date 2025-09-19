@@ -227,9 +227,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, profile })
   };
 
   const handleLogout = () => {
-    // Llamamos siempre a la función signOut del hook de autenticación.
-    // Esta se encargará de limpiar el estado del usuario (real o invitado) y provocar la redirección.
-    signOut();
+    // Cierra el modal de confirmación y llama a la función signOut del hook.
+    setIsLogoutConfirmOpen(false);
+    signOut(); // Esta función se encargará de la lógica de cierre de sesión.
   };
 
   if (!isOpen) {

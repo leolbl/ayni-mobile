@@ -27,31 +27,18 @@ export const AuthContext = createContext<AuthContextType>({
 const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [profileLoading, setProfileLoading] = useState(true);
+  // Para pruebas sin backend, iniciamos el estado de carga como `false`.
+  const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        setProfileLoading(true);
-        const userDocRef = doc(db, 'users', currentUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          setUserProfile(userDoc.data() as UserProfile);
-        } else {
-          setUserProfile(null);
-        }
-        setProfileLoading(false);
-      } else {
-        setUserProfile(null);
-        setProfileLoading(false);
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
+  // Se ha comentado el `useEffect` que usa `onAuthStateChanged` de Firebase.
+  // Esto evita que Firebase intente restaurar una sesión automáticamente,
+  // dándonos control total sobre el estado de autenticación para las pruebas.
+  // La app ahora solo funcionará con "Iniciar como Invitado" y el cierre de sesión simulado.
+  // useEffect(() => {
+  //   const unsubscribe = onAuthStateChanged(auth, ...);
+  //   return () => unsubscribe();
+  // }, []);
 
   const signInAsGuest = (profileData: Partial<UserProfile>) => {
     const guestUID = 'guest-' + new Date().getTime();

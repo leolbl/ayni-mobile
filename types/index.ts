@@ -36,6 +36,7 @@ export interface AnalysisResult {
   personalizedInsights: string[];
   riskFactors: string[];
   followUpPlan: string;
+  recommendedFrequencyDays?: number; // Frecuencia recomendada en días para el próximo análisis
 }
 
 // --- NUEVOS TIPOS PARA EL CHEQUEO DE BIENESTAR ---

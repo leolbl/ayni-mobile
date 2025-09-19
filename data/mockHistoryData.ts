@@ -52,7 +52,8 @@ export const mockHistoryData: MockHistoryEntry[] = [
                 'El estado de ánimo positivo es un excelente indicador de bienestar general'
             ],
             riskFactors: ['Sin factores de riesgo identificados en esta evaluación'],
-            followUpPlan: 'Continúa con chequeos mensuales preventivos. Mantén tus hábitos saludables actuales.'
+            followUpPlan: 'Continúa con chequeos mensuales preventivos. Mantén tus hábitos saludables actuales.',
+            recommendedFrequencyDays: 14 // Cada 2 semanas para perfil normal
         })
     },
     {
@@ -75,7 +76,8 @@ export const mockHistoryData: MockHistoryEntry[] = [
                 'Tus signos vitales se mantienen estables a pesar del estrés reportado'
             ],
             riskFactors: ['Estrés crónico - factor de riesgo cardiovascular si persiste'],
-            followUpPlan: 'Seguimiento en 2 semanas para evaluar niveles de estrés. Considera consulta con especialista en manejo de estrés si persiste.'
+            followUpPlan: 'Seguimiento en 2 semanas para evaluar niveles de estrés. Considera consulta con especialista en manejo de estrés si persiste.',
+            recommendedFrequencyDays: 10 // Seguimiento más frecuente por estrés
         })
     },
     {
@@ -100,7 +102,8 @@ export const mockHistoryData: MockHistoryEntry[] = [
                 'Tu temperatura está en el límite superior del rango normal'
             ],
             riskFactors: ['Hipertensión arterial', 'Síntomas de dolor sin causa clara'],
-            followUpPlan: 'Consulta médica prioritaria en 3-5 días. Monitoreo diario de presión arterial. Seguimiento en 1 semana.'
+            followUpPlan: 'Consulta médica prioritaria en 3-5 días. Monitoreo diario de presión arterial. Seguimiento en 1 semana.',
+            recommendedFrequencyDays: 3 // Seguimiento cada 3 días por signos de advertencia
         })
     }
 ];
