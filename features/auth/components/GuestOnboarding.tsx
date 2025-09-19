@@ -37,12 +37,12 @@ interface GuestOnboardingProps {
 }
 
 const RadioCard = ({ name, value, label, checked, onChange, description }: { name: string, value: string, label: string, checked: boolean, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, description?: string }) => (
-    <label className={`block p-4 border rounded-lg cursor-pointer transition-all ${checked ? 'bg-cyan-50 border-cyan-500 ring-2 ring-cyan-500' : 'bg-white border-slate-300 hover:bg-slate-50'}`}>
+    <label className={`block p-4 border rounded-lg cursor-pointer transition-all ${checked ? 'bg-[#2A787A]/10 border-[#2A787A] ring-2 ring-[#2A787A]' : 'bg-white border-slate-300 hover:bg-slate-50'}`}>
         <div className="flex items-center">
-            <input type="radio" name={name} value={value} checked={checked} onChange={onChange} className="h-4 w-4 text-cyan-600 border-slate-300 focus:ring-cyan-500" />
+            <input type="radio" name={name} value={value} checked={checked} onChange={onChange} className="h-4 w-4 text-[#2A787A] border-slate-300 focus:ring-[#2A787A]" />
             <div className="ml-3 text-sm">
-                <span className="font-medium text-slate-800">{label}</span>
-                {description && <p className="text-slate-500">{description}</p>}
+                <span className="font-medium text-[#1A2E40]">{label}</span>
+                {description && <p className="text-[#1A2E40]/70">{description}</p>}
             </div>
         </div>
     </label>
@@ -168,9 +168,9 @@ const GuestOnboarding: React.FC<GuestOnboardingProps> = ({ onClose }) => {
             <div className="bg-white rounded-2xl p-6 sm:p-8 w-full max-w-2xl shadow-xl flex flex-col max-h-[90vh] animate-fade-in">
                 {/* Header */}
                 <div className="flex-shrink-0">
-                    <div className="flex justify-between items-center mb-2">
-                         <h2 className="text-2xl font-bold text-slate-800">{STEPS[currentStep - 1].title}</h2>
-                        <button onClick={onClose} disabled={loading} className="text-slate-400 hover:text-slate-600">
+                    <div className="flex justify-between items-start mb-2">
+                         <h2 className="text-2xl font-bold text-[#1A2E40] font-poppins">{STEPS[currentStep - 1].title}</h2>
+                        <button onClick={onClose} disabled={loading} className="text-slate-400 hover:text-[#1A2E40]">
                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                     </div>
@@ -181,22 +181,22 @@ const GuestOnboarding: React.FC<GuestOnboardingProps> = ({ onClose }) => {
                 <div className="overflow-y-auto flex-grow my-6 pr-2 space-y-6">
                     {currentStep === 1 && (
                         <div>
-                             <p className="text-slate-500 mb-6">Por favor, introduce tu nombre para personalizar tu experiencia.</p>
-                            <label htmlFor="name" className="block text-sm font-medium text-slate-700">Tu Nombre</label>
-                            <input id="name" type="text" name="name" value={formData.name} onChange={handleInputChange} className="mt-1 w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500 focus:border-transparent transition" placeholder="Ej: Alex" required autoFocus />
+                             <p className="text-[#1A2E40]/80 mb-6">Por favor, introduce tu nombre para personalizar tu experiencia.</p>
+                            <label htmlFor="name" className="block text-sm font-medium text-[#1A2E40]">Tu Nombre</label>
+                            <input id="name" type="text" name="name" value={formData.name} onChange={handleInputChange} className="mt-1 w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#2A787A] focus:border-transparent transition" placeholder="Ej: Alex" required autoFocus />
                         </div>
                     )}
                     {currentStep === 2 && (
                          <>
-                            <p className="text-slate-500 mb-6">Estos datos nos ayudan a calcular métricas importantes como tu IMC.</p>
+                            <p className="text-[#1A2E40]/80 mb-6">Estos datos nos ayudan a calcular métricas importantes como tu IMC.</p>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700">Fecha de Nacimiento</label>
-                                    <input type="date" name="birthDate" value={formData.birthDate} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-inset focus:ring-cyan-500 focus:border-cyan-500"/>
+                                    <label className="block text-sm font-medium text-[#1A2E40]">Fecha de Nacimiento</label>
+                                    <input type="date" name="birthDate" value={formData.birthDate} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-inset focus:ring-[#2A787A] focus:border-[#2A787A]"/>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700">Sexo Biológico</label>
-                                    <select name="sex" value={formData.sex} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-inset focus:ring-cyan-500 focus:border-cyan-500 bg-white">
+                                    <label className="block text-sm font-medium text-[#1A2E40]">Sexo Biológico</label>
+                                    <select name="sex" value={formData.sex} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-inset focus:ring-[#2A787A] focus:border-[#2A787A] bg-white">
                                         <option value="">Seleccionar...</option>
                                         <option value="male">Masculino</option>
                                         <option value="female">Femenino</option>
@@ -204,44 +204,44 @@ const GuestOnboarding: React.FC<GuestOnboardingProps> = ({ onClose }) => {
                                     </select>
                                 </div>
                                  <div>
-                                    <label className="block text-sm font-medium text-slate-700">Altura (cm)</label>
-                                    <input type="number" name="height" value={formData.height} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-inset focus:ring-cyan-500 focus:border-cyan-500"/>
+                                    <label className="block text-sm font-medium text-[#1A2E40]">Altura (cm)</label>
+                                    <input type="number" name="height" value={formData.height} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-inset focus:ring-[#2A787A] focus:border-[#2A787A]"/>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700">Peso (kg)</label>
-                                    <input type="number" name="weight" value={formData.weight} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-inset focus:ring-cyan-500 focus:border-cyan-500"/>
+                                    <label className="block text-sm font-medium text-[#1A2E40]">Peso (kg)</label>
+                                    <input type="number" name="weight" value={formData.weight} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-inset focus:ring-[#2A787A] focus:border-[#2A787A]"/>
                                 </div>
                             </div>
                         </>
                     )}
                     {currentStep === 3 && (
                         <>
-                            <p className="text-slate-500 mb-6">Selecciona cualquier condición preexistente. Esto es crucial para un análisis preciso.</p>
+                            <p className="text-[#1A2E40]/80 mb-6">Selecciona cualquier condición preexistente. Esto es crucial para un análisis preciso.</p>
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Condiciones Crónicas</label>
-                                    <div className="flex flex-wrap gap-2">{CHRONIC_CONDITIONS_OPTIONS.map(c => (<button type="button" key={c} onClick={() => handleChipToggle('chronicConditions', c)} className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${formData.chronicConditions?.includes(c) ? 'bg-cyan-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>{c}</button>))}</div>
+                                    <label className="block text-sm font-medium text-[#1A2E40] mb-2">Condiciones Crónicas</label>
+                                    <div className="flex flex-wrap gap-2">{CHRONIC_CONDITIONS_OPTIONS.map(c => (<button type="button" key={c} onClick={() => handleChipToggle('chronicConditions', c)} className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${formData.chronicConditions?.includes(c) ? 'bg-[#2A787A] text-white' : 'bg-slate-100 text-[#1A2E40] hover:bg-slate-200'}`}>{c}</button>))}</div>
                                     {formData.chronicConditions?.includes('Otros') && (
                                         <div className="mt-3 animate-fade-in">
-                                            <input type="text" value={otherChronicCondition} onChange={(e) => setOtherChronicCondition(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-inset focus:ring-cyan-500 focus:border-cyan-500" placeholder="Por favor, especifica..."/>
+                                            <input type="text" value={otherChronicCondition} onChange={(e) => setOtherChronicCondition(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-inset focus:ring-[#2A787A] focus:border-[#2A787A]" placeholder="Por favor, especifica..."/>
                                         </div>
                                     )}
                                 </div>
                                  <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Alergias Conocidas</label>
-                                    <div className="flex flex-wrap gap-2">{ALLERGIES_OPTIONS.map(a => (<button type="button" key={a} onClick={() => handleChipToggle('allergies', a)} className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${formData.allergies?.includes(a) ? 'bg-cyan-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>{a}</button>))}</div>
+                                    <label className="block text-sm font-medium text-[#1A2E40] mb-2">Alergias Conocidas</label>
+                                    <div className="flex flex-wrap gap-2">{ALLERGIES_OPTIONS.map(a => (<button type="button" key={a} onClick={() => handleChipToggle('allergies', a)} className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${formData.allergies?.includes(a) ? 'bg-[#2A787A] text-white' : 'bg-slate-100 text-[#1A2E40] hover:bg-slate-200'}`}>{a}</button>))}</div>
                                      {formData.allergies?.includes('Otros') && (
                                         <div className="mt-3 animate-fade-in">
-                                            <input type="text" value={otherAllergy} onChange={(e) => setOtherAllergy(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-inset focus:ring-cyan-500 focus:border-cyan-500" placeholder="Por favor, especifica..."/>
+                                            <input type="text" value={otherAllergy} onChange={(e) => setOtherAllergy(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-inset focus:ring-[#2A787A] focus:border-[#2A787A]" placeholder="Por favor, especifica..."/>
                                         </div>
                                     )}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Cirugías o Enfermedades Pasadas Significativas</label>
-                                    <div className="flex flex-wrap gap-2">{COMMON_SURGERIES_OPTIONS.map(s => (<button type="button" key={s} onClick={() => handleChipToggle('surgeriesOrPastIllnesses', s)} className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${formData.surgeriesOrPastIllnesses?.includes(s) ? 'bg-cyan-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>{s}</button>))}</div>
+                                    <label className="block text-sm font-medium text-[#1A2E40] mb-2">Cirugías o Enfermedades Pasadas Significativas</label>
+                                    <div className="flex flex-wrap gap-2">{COMMON_SURGERIES_OPTIONS.map(s => (<button type="button" key={s} onClick={() => handleChipToggle('surgeriesOrPastIllnesses', s)} className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${formData.surgeriesOrPastIllnesses?.includes(s) ? 'bg-[#2A787A] text-white' : 'bg-slate-100 text-[#1A2E40] hover:bg-slate-200'}`}>{s}</button>))}</div>
                                     {formData.surgeriesOrPastIllnesses?.includes('Otros') && (
                                         <div className="mt-3 animate-fade-in">
-                                            <input type="text" value={otherSurgery} onChange={(e) => setOtherSurgery(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-inset focus:ring-cyan-500 focus:border-cyan-500" placeholder="Por favor, especifica..."/>
+                                            <input type="text" value={otherSurgery} onChange={(e) => setOtherSurgery(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-inset focus:ring-[#2A787A] focus:border-[#2A787A]" placeholder="Por favor, especifica..."/>
                                         </div>
                                     )}
                                 </div>
@@ -250,13 +250,13 @@ const GuestOnboarding: React.FC<GuestOnboardingProps> = ({ onClose }) => {
                     )}
                      {currentStep === 4 && (
                         <>
-                            <p className="text-slate-500 mb-6">Saber qué medicamentos y suplementos tomas ayuda a evitar interacciones y a entender mejor tu salud.</p>
+                            <p className="text-[#1A2E40]/80 mb-6">Saber qué medicamentos y suplementos tomas ayuda a evitar interacciones y a entender mejor tu salud.</p>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">Medicamentos y Suplementos Actuales</label>
-                                <div className="flex flex-wrap gap-2">{COMMON_MEDICATIONS_OPTIONS.map(m => (<button type="button" key={m} onClick={() => handleChipToggle('medicationsAndSupplements', m)} className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${formData.medicationsAndSupplements?.includes(m) ? 'bg-cyan-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>{m}</button>))}</div>
+                                <label className="block text-sm font-medium text-[#1A2E40] mb-2">Medicamentos y Suplementos Actuales</label>
+                                <div className="flex flex-wrap gap-2">{COMMON_MEDICATIONS_OPTIONS.map(m => (<button type="button" key={m} onClick={() => handleChipToggle('medicationsAndSupplements', m)} className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${formData.medicationsAndSupplements?.includes(m) ? 'bg-[#2A787A] text-white' : 'bg-slate-100 text-[#1A2E40] hover:bg-slate-200'}`}>{m}</button>))}</div>
                                 {formData.medicationsAndSupplements?.includes('Otros') && (
                                     <div className="mt-3 animate-fade-in">
-                                        <input type="text" value={otherMedication} onChange={(e) => setOtherMedication(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-inset focus:ring-cyan-500 focus:border-cyan-500" placeholder="Por favor, especifica..."/>
+                                        <input type="text" value={otherMedication} onChange={(e) => setOtherMedication(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-inset focus:ring-[#2A787A] focus:border-[#2A787A]" placeholder="Por favor, especifica..."/>
                                     </div>
                                 )}
                             </div>
@@ -264,10 +264,10 @@ const GuestOnboarding: React.FC<GuestOnboardingProps> = ({ onClose }) => {
                     )}
                     {currentStep === 5 && (
                          <>
-                            <p className="text-slate-500 mb-6">Tus hábitos diarios son una parte importante de tu bienestar general.</p>
+                            <p className="text-[#1A2E40]/80 mb-6">Tus hábitos diarios son una parte importante de tu bienestar general.</p>
                             <div className="space-y-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Tabaquismo</label>
+                                    <label className="block text-sm font-medium text-[#1A2E40] mb-2">Tabaquismo</label>
                                     <div className="space-y-2">
                                         <RadioCard name="smokingStatus" value="never" label="Nunca he fumado" checked={formData.smokingStatus === 'never'} onChange={handleInputChange} />
                                         <RadioCard name="smokingStatus" value="former" label="Ex-fumador/a" checked={formData.smokingStatus === 'former'} onChange={handleInputChange} />
@@ -275,7 +275,7 @@ const GuestOnboarding: React.FC<GuestOnboardingProps> = ({ onClose }) => {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Consumo de Alcohol</label>
+                                    <label className="block text-sm font-medium text-[#1A2E40] mb-2">Consumo de Alcohol</label>
                                     <div className="space-y-2">
                                          <RadioCard name="alcoholConsumption" value="none" label="No bebo alcohol" checked={formData.alcoholConsumption === 'none'} onChange={handleInputChange} />
                                          <RadioCard name="alcoholConsumption" value="light" label="Ocasional / Ligero" description="1-3 bebidas por semana" checked={formData.alcoholConsumption === 'light'} onChange={handleInputChange} />
@@ -284,7 +284,7 @@ const GuestOnboarding: React.FC<GuestOnboardingProps> = ({ onClose }) => {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Frecuencia de Ejercicio</label>
+                                    <label className="block text-sm font-medium text-[#1A2E40] mb-2">Frecuencia de Ejercicio</label>
                                     <div className="space-y-2">
                                          <RadioCard name="exerciseFrequency" value="never" label="Nunca o casi nunca" checked={formData.exerciseFrequency === 'never'} onChange={handleInputChange} />
                                          <RadioCard name="exerciseFrequency" value="rarely" label="Raramente" description="Menos de 1 vez por semana" checked={formData.exerciseFrequency === 'rarely'} onChange={handleInputChange} />
@@ -293,8 +293,8 @@ const GuestOnboarding: React.FC<GuestOnboardingProps> = ({ onClose }) => {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Consumo de Drogas Recreativas</label>
-                                    <p className="text-xs text-slate-500 mb-2">Esta información es confidencial y nos ayuda a entender factores de riesgo adicionales.</p>
+                                    <label className="block text-sm font-medium text-[#1A2E40] mb-2">Consumo de Drogas Recreativas</label>
+                                    <p className="text-xs text-[#1A2E40]/70 mb-2">Esta información es confidencial y nos ayuda a entender factores de riesgo adicionales.</p>
                                     <div className="space-y-2">
                                          <RadioCard name="drugConsumption" value="none" label="No consumo" checked={formData.drugConsumption === 'none'} onChange={handleInputChange} />
                                          <RadioCard name="drugConsumption" value="rarely" label="Ocasionalmente" checked={formData.drugConsumption === 'rarely'} onChange={handleInputChange} />
@@ -310,23 +310,23 @@ const GuestOnboarding: React.FC<GuestOnboardingProps> = ({ onClose }) => {
                 {/* Footer Navigation */}
                 <div className="mt-auto pt-4 border-t border-slate-200 flex-shrink-0">
                     <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
-                        <button type="button" onClick={prevStep} disabled={currentStep === 1 || loading} className="px-4 sm:px-6 py-2 text-slate-700 bg-slate-200 rounded-lg font-semibold hover:bg-slate-300 disabled:opacity-50 transition-colors flex-shrink-0">Atrás</button>
+                        <button type="button" onClick={prevStep} disabled={currentStep === 1 || loading} className="px-4 sm:px-6 py-2 text-[#1A2E40] bg-slate-200 rounded-lg font-semibold hover:bg-slate-300 disabled:opacity-50 transition-colors flex-shrink-0">Atrás</button>
                         
                         {currentStep < STEPS.length ? (
                             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:space-x-2">
                                 {currentStep > 1 && (
-                                    <button type="button" onClick={nextStep} className="px-4 sm:px-6 py-2 text-slate-700 font-semibold hover:bg-slate-100 rounded-lg transition-colors">
+                                    <button type="button" onClick={nextStep} className="px-4 sm:px-6 py-2 text-[#1A2E40] font-semibold hover:bg-slate-100 rounded-lg transition-colors">
                                         Omitir
                                     </button>
                                 )}
-                                <button type="button" onClick={nextStep} disabled={!isStepValid()} className="px-4 sm:px-6 py-2 text-white bg-cyan-600 rounded-lg font-semibold hover:bg-cyan-700 disabled:bg-cyan-300 disabled:cursor-not-allowed transition-colors">Siguiente</button>
+                                <button type="button" onClick={nextStep} disabled={!isStepValid()} className="px-4 sm:px-6 py-2 text-white bg-[#2A787A] rounded-lg font-semibold hover:bg-[#2A787A]/90 disabled:bg-[#2A787A]/50 disabled:cursor-not-allowed transition-colors">Siguiente</button>
                             </div>
                         ) : (
                             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:space-x-2">
-                                <button type="button" onClick={handleSubmit} disabled={loading} className="px-4 sm:px-6 py-2 text-slate-700 font-semibold hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50">
+                                <button type="button" onClick={handleSubmit} disabled={loading} className="px-4 sm:px-6 py-2 text-[#1A2E40] font-semibold hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50">
                                     Omitir y Enviar
                                 </button>
-                                <button type="button" onClick={handleSubmit} disabled={loading || !isStepValid()} className="px-4 sm:px-6 py-2 text-white bg-green-600 rounded-lg font-semibold hover:bg-green-700 disabled:bg-green-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center w-full sm:w-auto sm:min-w-[180px]">
+                                <button type="button" onClick={handleSubmit} disabled={loading || !isStepValid()} className="px-4 sm:px-6 py-2 text-white bg-[#2A787A] rounded-lg font-semibold hover:bg-[#2A787A]/90 disabled:bg-[#2A787A]/50 disabled:cursor-not-allowed transition-colors flex items-center justify-center w-full sm:w-auto sm:min-w-[180px]">
                                     {loading ? <Spinner size="sm" /> : 'Finalizar y Comenzar'}
                                 </button>
                             </div>

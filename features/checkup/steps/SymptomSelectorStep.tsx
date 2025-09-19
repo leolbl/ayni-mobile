@@ -39,34 +39,34 @@ const CustomSymptomModal: React.FC<{
 
     return (
         <div className="fixed inset-0 bg-black/50 z-20 flex items-center justify-center p-4 animate-fade-in">
-            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
-                <h3 className="text-xl font-bold text-slate-800 mb-4">Añadir Síntoma Personalizado</h3>
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl font-sans">
+                <h3 className="text-xl font-bold text-[#1A2E40] font-poppins mb-4">Añadir Síntoma Personalizado</h3>
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
-                        <label htmlFor="symptomName" className="block text-sm font-medium text-slate-700 mb-1">Nombre del Síntoma</label>
+                        <label htmlFor="symptomName" className="block text-sm font-medium text-[#1A2E40] mb-1">Nombre del Síntoma</label>
                         <input
                             id="symptomName"
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
+                            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#2A787A]"
                             placeholder="Ej: Dolor articular"
                             required
                         />
                     </div>
                     <div className="mb-6">
-                        <label htmlFor="symptomDetails" className="block text-sm font-medium text-slate-700 mb-1">Descripción (opcional)</label>
+                        <label htmlFor="symptomDetails" className="block text-sm font-medium text-[#1A2E40] mb-1">Descripción (opcional)</label>
                         <textarea
                             id="symptomDetails"
                             value={details}
                             onChange={(e) => setDetails(e.target.value)}
-                            className="w-full h-24 p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
+                            className="w-full h-24 p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#2A787A]"
                             placeholder="Describe dónde y cómo se siente..."
                         />
                     </div>
                     <div className="flex justify-end space-x-3">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-slate-700 bg-slate-100 rounded-lg font-semibold hover:bg-slate-200">Cancelar</button>
-                        <button type="submit" className="px-4 py-2 text-white bg-cyan-600 rounded-lg font-semibold hover:bg-cyan-700">Añadir Síntoma</button>
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-[#1A2E40] bg-slate-100 rounded-lg font-semibold hover:bg-slate-200">Cancelar</button>
+                        <button type="submit" className="px-4 py-2 text-white bg-[#2A787A] rounded-lg font-semibold hover:bg-[#2A787A]/90">Añadir Síntoma</button>
                     </div>
                 </form>
             </div>
@@ -121,8 +121,8 @@ const SymptomSelectorStep: React.FC<SymptomSelectorStepProps> = ({ data, onUpdat
   return (
     <>
         <div className="flex flex-col h-full animate-fade-in">
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 text-center mb-2">¿Tienes algún síntoma específico que reportar hoy?</h2>
-            <p className="text-slate-500 text-center mb-6">Busca síntomas a continuación. Si te sientes bien, puedes finalizar el chequeo.</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#1A2E40] font-poppins text-center mb-2">¿Tienes algún síntoma específico que reportar hoy?</h2>
+            <p className="text-[#1A2E40]/80 text-center mb-6">Busca síntomas a continuación. Si te sientes bien, puedes finalizar el chequeo.</p>
 
             <div className="relative">
                 <input
@@ -130,7 +130,7 @@ const SymptomSelectorStep: React.FC<SymptomSelectorStepProps> = ({ data, onUpdat
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Busca un síntoma (Ej: Dolor de cabeza)"
-                    className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
+                    className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#2A787A]"
                 />
                 {filteredSymptoms.length > 0 && (
                     <ul className="absolute z-10 w-full bg-white border border-slate-200 rounded-lg mt-1 shadow-lg max-h-48 overflow-y-auto">
@@ -145,7 +145,7 @@ const SymptomSelectorStep: React.FC<SymptomSelectorStepProps> = ({ data, onUpdat
             </div>
 
             <div className="text-center mt-3">
-                <button onClick={() => setIsCustomModalOpen(true)} className="text-sm text-cyan-600 hover:text-cyan-800 font-semibold hover:underline">
+                <button onClick={() => setIsCustomModalOpen(true)} className="text-sm text-[#2A787A] hover:text-[#2A787A]/80 font-semibold hover:underline">
                     ¿No encuentras tu síntoma? Añádelo manualmente.
                 </button>
             </div>
@@ -153,13 +153,13 @@ const SymptomSelectorStep: React.FC<SymptomSelectorStepProps> = ({ data, onUpdat
             <div className="flex-grow mt-4 overflow-y-auto pr-2">
                 {data.length > 0 ? (
                     <div className="space-y-3">
-                        <h3 className="font-semibold text-slate-700">Tus Síntomas (haz clic para evaluar):</h3>
+                        <h3 className="font-semibold text-[#1A2E40]">Tus Síntomas (haz clic para evaluar):</h3>
                         <div className="flex flex-wrap gap-3">
                             {data.map(symptom => (
                                 <div key={symptom.name} className="animate-fade-in">
                                     <button 
                                         onClick={() => setActiveSymptom(symptom.name)}
-                                        className={`py-2 pl-4 pr-3 rounded-full text-sm font-medium transition-all duration-200 flex items-center group ${activeSymptom === symptom.name ? 'bg-cyan-600 text-white shadow-md' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>
+                                        className={`py-2 pl-4 pr-3 rounded-full text-sm font-medium transition-all duration-200 flex items-center group ${activeSymptom === symptom.name ? 'bg-[#2A787A] text-white shadow-md' : 'bg-slate-100 text-[#1A2E40] hover:bg-slate-200'}`}>
                                         {symptom.name}
                                         <span className="ml-2 font-mono text-xs opacity-70">({symptom.intensity})</span>
                                         <span 
@@ -175,14 +175,14 @@ const SymptomSelectorStep: React.FC<SymptomSelectorStepProps> = ({ data, onUpdat
 
                         {currentSymptomData && (
                             <div className="mt-4 p-4 bg-slate-50 rounded-lg border animate-fade-in">
-                                <h4 className="font-bold text-lg text-cyan-700">Evaluar "{currentSymptomData.name}"</h4>
+                                <h4 className="font-bold text-lg text-[#2A787A] font-poppins">Evaluar "{currentSymptomData.name}"</h4>
                                 <div className="my-3">
-                                    <label className="block text-sm font-medium text-slate-600 mb-1">Intensidad: {currentSymptomData.intensity}</label>
+                                    <label className="block text-sm font-medium text-[#1A2E40]/90 mb-1">Intensidad: {currentSymptomData.intensity}</label>
                                     <div className="flex items-center space-x-2">
                                         <span className="text-xs text-slate-500">Leve</span>
                                         <input type="range" min="1" max="10" value={currentSymptomData.intensity}
                                             onChange={(e) => updateSymptom(currentSymptomData.name, { intensity: parseInt(e.target.value) })}
-                                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-cyan-600"
+                                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#2A787A]"
                                         />
                                         <span className="text-xs text-slate-500">Grave</span>
                                     </div>
@@ -191,7 +191,7 @@ const SymptomSelectorStep: React.FC<SymptomSelectorStepProps> = ({ data, onUpdat
                                     value={currentSymptomData.details}
                                     onChange={(e) => updateSymptom(currentSymptomData.name, { details: e.target.value })}
                                     placeholder="Añade más detalles (opcional)"
-                                    className="w-full h-20 p-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500"
+                                    className="w-full h-20 p-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#2A787A]"
                                 />
                             </div>
                         )}
