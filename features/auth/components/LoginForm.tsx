@@ -73,15 +73,29 @@ const LoginForm: React.FC = () => {
   return (
     <>
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cyan-50 to-blue-100 p-4">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 space-y-6">
-          <div className="text-center">
+        <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-6 space-y-4 relative">
+          {/* Espacio para el logo en la parte superior del panel */}
+          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
+            <div className="w-16 h-16 bg-white rounded-full shadow-lg flex items-center justify-center">
+              {/* Aquí irá tu logo en PNG */}
+              <img 
+                src="./../../assets/logo.png" 
+                alt="AyniSalud Logo" 
+                className="w-12 h-12 object-contain"
+                // Comentar la línea de arriba y descomentar la de abajo cuando tengas el logo
+                // style={{ display: 'none' }}
+              />
+            </div>
+          </div>
+          
+          <div className="text-center pt-4">
               <h1 className="text-3xl font-bold text-slate-800">AyniSalud</h1>
               <p className="text-slate-500 mt-2">{isLogin ? 'Bienvenido/a de nuevo, cuídate.' : 'Crea tu cuenta de salud.'}</p>
           </div>
           
           {error && <p className="bg-red-100 text-red-700 p-3 rounded-lg text-sm">{error}</p>}
           
-          <form onSubmit={handleAuthAction} className="space-y-6">
+          <form onSubmit={handleAuthAction} className="space-y-4">
             <div>
               <label className="text-sm font-medium text-slate-600" htmlFor="email">Correo Electrónico</label>
               <input 

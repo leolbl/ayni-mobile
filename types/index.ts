@@ -31,6 +31,8 @@ export interface AnalysisResult {
   riskLevel: 'normal' | 'warning' | 'alert';
   explanation: string;
   recommendations: string[];
+  keyFindings: string[];
+  urgencyLevel: 'routine' | 'priority' | 'urgent';
 }
 
 // --- NUEVOS TIPOS PARA EL CHEQUEO DE BIENESTAR ---

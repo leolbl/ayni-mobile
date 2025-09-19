@@ -35,14 +35,14 @@ const CountdownCard: React.FC = () => {
 
     return (
         <div className="bg-white p-6 rounded-2xl shadow-md flex flex-col justify-center items-center text-center h-full">
-            <h3 className="text-lg font-semibold text-slate-500 mb-1">Próximo Análisis Recomendado</h3>
+            <h3 className="text-lg lg:text-xl font-semibold text-slate-500 mb-1">Próximo Análisis Recomendado</h3>
             {Object.keys(timeLeft).length > 0 ? (
                 <>
                     <div className="flex items-baseline my-2">
-                        <span className="text-8xl font-bold text-cyan-600 tracking-tighter">{timeLeft.days}</span>
-                        <span className="text-2xl font-semibold text-slate-600 ml-2">días</span>
+                        <span className="text-8xl lg:text-9xl font-bold text-cyan-600 tracking-tighter">{timeLeft.days}</span>
+                        <span className="text-2xl lg:text-3xl font-semibold text-slate-600 ml-2">días</span>
                     </div>
-                    <div className="text-slate-500">
+                    <div className="text-base lg:text-lg text-slate-500">
                         {timeLeft.hours} horas, {timeLeft.minutes} minutos
                     </div>
                 </>
@@ -124,7 +124,6 @@ const UserCircleIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
-
 const Dashboard: React.FC = () => {
   const { userProfile } = useAuth();
   const [isCheckupActive, setIsCheckupActive] = useState(false);
@@ -147,35 +146,46 @@ const Dashboard: React.FC = () => {
     <>
       <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         <header className="flex justify-between items-center mb-8">
-          <div className="flex items-center space-x-4">
-              <button 
-                onClick={() => setIsProfileModalOpen(true)}
-                className="text-slate-500 hover:text-cyan-600 transition-colors flex-shrink-0"
-                aria-label="Abrir perfil de usuario"
-              >
-                  <UserCircleIcon className="w-10 h-10" />
-              </button>
-              <div>
-                <h1 className="text-3xl font-bold text-slate-800">{greeting}</h1>
-                <p className="text-slate-500 mt-1">¿Cómo te sientes hoy?</p>
-              </div>
+          <div className="flex items-center gap-4">
+            <img
+              src="../assets/logo.png"
+              alt="AyniSalud Logo"
+              className="h-12 w-12 object-contain"
+            />
+            <div>
+              <h1 className="text-3xl font-bold text-slate-800">{greeting}</h1>
+              <p className="text-slate-500 mt-1">¿Cómo te sientes hoy?</p>
+            </div>
           </div>
           <button
-            onClick={() => auth.signOut()}
-            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+            onClick={() => setIsProfileModalOpen(true)}
+            className="text-slate-500 hover:text-cyan-600 transition-colors"
+            aria-label="Abrir perfil de usuario"
           >
-            Cerrar Sesión
+            <UserCircleIcon className="w-10 h-10" />
           </button>
         </header>
 
         <main>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <div className="lg:col-span-2">
-                <CountdownCard />
+              <CountdownCard />
             </div>
+            {/* En móvil, esta columna se convierte en flex para reordenar sus hijos */}
             <div className="lg:col-span-1 flex flex-col gap-6">
-                <StreakCard />
-                <AnalysisHistoryCard />
+              <StreakCard />
+              {/* El panel de Chequeo de Salud se mueve aquí para reordenarlo en móvil */}
+              <div className="order-3 lg:order-none bg-gradient-to-r from-cyan-500 to-blue-500 p-8 rounded-2xl text-white shadow-lg text-center md:text-left">
+              <h2 className="text-2xl font-bold">Chequeo de Salud</h2>
+              <p className="mt-2 mb-6 opacity-90">Obtén un análisis rápido de tus síntomas para entender el nivel de riesgo potencial.</p>
+              <button onClick={handleStartCheckup} className="bg-white text-cyan-600 font-bold py-3 px-6 rounded-lg hover:bg-slate-100 transition-transform transform hover:scale-105">
+                Iniciar Chequeo de Bienestar
+              </button>
+            </div>
+              {/* El historial se va al final en el orden flex de móvil */}
+              <div className="order-4 lg:order-none">
+              <AnalysisHistoryCard />
+              </div>
             </div>
           </div>
           
@@ -184,18 +194,6 @@ const Dashboard: React.FC = () => {
                 <AnalysisResultCard result={analysisResult} />
             </div>
           )}
-
-          <div className="bg-gradient-to-r from-cyan-500 to-blue-500 p-8 rounded-2xl text-white shadow-lg text-center md:text-left">
-            <h2 className="text-2xl font-bold">Chequeo de Salud</h2>
-            <p className="mt-2 mb-6 opacity-90">Obtén un análisis rápido de tus síntomas para entender el nivel de riesgo potencial.</p>
-            <button 
-              onClick={handleStartCheckup}
-              className="bg-white text-cyan-600 font-bold py-3 px-6 rounded-lg hover:bg-slate-100 transition-transform transform hover:scale-105"
-            >
-              Iniciar Chequeo de Bienestar
-            </button>
-          </div>
-          
         </main>
       </div>
       
@@ -212,7 +210,8 @@ const Dashboard: React.FC = () => {
           onClose={() => setIsProfileModalOpen(false)}
           profile={userProfile}
         />
-       )}
+      )}
+
     </>
   );
 };
