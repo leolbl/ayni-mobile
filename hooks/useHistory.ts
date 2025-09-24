@@ -72,6 +72,8 @@ export const useHistory = (useMockData: boolean = false, userProfile?: any): Use
      * Agregar un nuevo análisis al historial
      */
     const addNewAnalysis = useCallback((checkup: Checkup, result: AnalysisResult) => {
+        console.log('✅ Nuevo análisis agregado - recommendedFrequencyDays:', result.recommendedFrequencyDays);
+        
         const newEntry: HistoryEntry = {
             id: `analysis_${Date.now()}`,
             date: new Date(),
@@ -120,19 +122,22 @@ export const useHistory = (useMockData: boolean = false, userProfile?: any): Use
      */
     const getNextAnalysisDate = useCallback((): Date => {
         if (!userProfile) {
-            // Si no hay perfil de usuario, usar valor por defecto de 7 días
+            console.log('⚠️ getNextAnalysisDate: Sin perfil de usuario, usando 7 días por defecto');
             const nextDate = new Date();
             nextDate.setDate(nextDate.getDate() + 7);
             return nextDate;
         }
 
         if (!latestAnalysis) {
-            // Si no hay historial, usar la evaluación de riesgo del perfil del usuario
-            return calculateNextAnalysisDate(userProfile);
+            console.log('📋 getNextAnalysisDate: Sin análisis previo, usando evaluación de perfil');
+            const nextDate = calculateNextAnalysisDate(userProfile);
+            return nextDate;
         }
 
         // Usar la frecuencia específica recomendada en el último análisis
         const frequency = latestAnalysis.result.recommendedFrequencyDays || 7;
+        console.log(`🔄 getNextAnalysisDate: Usando último análisis - frecuencia: ${frequency} días`);
+        
         const nextDate = new Date(latestAnalysis.date);
         nextDate.setDate(nextDate.getDate() + frequency);
         return nextDate;

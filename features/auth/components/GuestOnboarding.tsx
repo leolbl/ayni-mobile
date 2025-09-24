@@ -75,11 +75,78 @@ const GuestOnboarding: React.FC<GuestOnboardingProps> = ({ onClose }) => {
     const [otherAllergy, setOtherAllergy] = useState('');
     const [otherSurgery, setOtherSurgery] = useState('');
     const [otherMedication, setOtherMedication] = useState('');
+    const [birthDateError, setBirthDateError] = useState<string | null>(null);
+    const [heightError, setHeightError] = useState<string | null>(null);
+    const [weightError, setWeightError] = useState<string | null>(null);
 
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const validateAndSetBirthDate = (dateString: string) => {
+        setFormData(prev => ({ ...prev, birthDate: dateString }));
+
+        if (!dateString) {
+            setBirthDateError(null);
+            return;
+        }
+
+        // Parse date parts to avoid timezone issues from new Date('YYYY-MM-DD')
+        const parts = dateString.split('-').map(part => parseInt(part, 10));
+        const birthDate = new Date(parts[0], parts[1] - 1, parts[2]);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to the beginning of today
+
+        if (birthDate > today) {
+            setBirthDateError("La fecha de nacimiento no puede ser futura.");
+            return;
+        }
+
+        const age = today.getFullYear() - birthDate.getFullYear();
+        if (age > 200) {
+            setBirthDateError("La edad no puede superar los 200 años.");
+            return;
+        }
+        setBirthDateError(null);
+    };
+
+    const validateAndSetHeight = (value: string) => {
+        const numericValue = value === '' ? undefined : Number(value);
+        setFormData(prev => ({ ...prev, height: numericValue }));
+
+        if (value === '' || numericValue === undefined) {
+            setHeightError(null);
+            return;
+        }
+
+        if (numericValue <= 0) {
+            setHeightError("La altura debe ser un valor positivo.");
+        } else if (numericValue > 300) { // 3 metros
+            setHeightError("La altura no puede superar los 300 cm.");
+        } else {
+            setHeightError(null);
+        }
+    };
+
+    const validateAndSetWeight = (value: string) => {
+        const numericValue = value === '' ? undefined : Number(value);
+        setFormData(prev => ({ ...prev, weight: numericValue }));
+
+        if (value === '' || numericValue === undefined) {
+            setWeightError(null);
+            return;
+        }
+
+        if (numericValue <= 0) {
+            setWeightError("El peso debe ser un valor positivo.");
+        } else if (numericValue > 500) {
+            setWeightError("El peso no puede superar los 500 kg.");
+        } else {
+            setWeightError(null);
+        }
     };
 
     const handleChipToggle = (
@@ -155,7 +222,9 @@ const GuestOnboarding: React.FC<GuestOnboardingProps> = ({ onClose }) => {
     const isStepValid = () => {
         switch(currentStep) {
             case 1: return formData.name?.trim().length ?? 0 > 0;
-            case 2: return !!formData.birthDate && !!formData.sex && !!formData.height && !!formData.weight;
+            case 2: {
+                return !!formData.birthDate && !birthDateError && !!formData.sex && !!formData.height && !heightError && !!formData.weight && !weightError;
+            }
             case 3: return (formData.chronicConditions?.length ?? 0) > 0 && (formData.allergies?.length ?? 0) > 0 && (formData.surgeriesOrPastIllnesses?.length ?? 0) > 0;
             case 4: return (formData.medicationsAndSupplements?.length ?? 0) > 0;
             case 5: return !!formData.smokingStatus && !!formData.alcoholConsumption && !!formData.exerciseFrequency && !!formData.drugConsumption;
@@ -192,7 +261,10 @@ const GuestOnboarding: React.FC<GuestOnboardingProps> = ({ onClose }) => {
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-[#1A2E40]">Fecha de Nacimiento</label>
-                                    <input type="date" name="birthDate" value={formData.birthDate} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-inset focus:ring-[#2A787A] focus:border-[#2A787A]"/>
+                                    <input type="date" name="birthDate" value={formData.birthDate} onChange={(e) => validateAndSetBirthDate(e.target.value)} className={`mt-1 block w-full px-3 py-2 bg-white border rounded-md shadow-sm focus:ring-2 focus:ring-inset focus:border-transparent ${birthDateError ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-[#2A787A]'}`}/>
+                                    {birthDateError && (
+                                        <p className="mt-1 text-xs text-red-600 animate-fade-in">{birthDateError}</p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-[#1A2E40]">Sexo Biológico</label>
